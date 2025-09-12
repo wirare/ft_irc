@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:57:59 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/09/12 01:24:07 by wirare           ###   ########.fr       */
+/*   Updated: 2025/09/12 15:07:51 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <stdexcept>
@@ -27,3 +27,5 @@
 #define CANT_BIND_TO_PORT EXCEPTION(std::runtime_error, "Can't bind to port")
 #define CANT_LISTEN_SOCKET EXCEPTION(std::runtime_error, "Can't listen on socket")
 #define EPOLL_CTL_ADD_FAILURE EXCEPTION(std::runtime_error, "Error on EPOLL_CTL_ADD")
+#define CANT_ACCEPT_CONNECTION EXCEPTION(std::runtime_error, "Can't accept the connection")
+#define EPOLL_WAIT_FAILURE EXCEPTION(std::runtime_error, "Error on epoll_wait")

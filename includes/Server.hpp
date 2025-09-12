@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/09/12 01:29:28 by wirare           ###   ########.fr       */
+/*   Updated: 2025/09/12 15:27:12 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -34,7 +34,50 @@ public:
 		}
 		catch (std::exception &e)
 		{
+			if (sock_fd != 1)
+				close(sock_fd);
 			std::cout << "Error on Server setup : " << e.what() << std::endl;
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	void launch()
+	{
+		int nfds;
+		while (1)
+		{
+			nfds = epoll_wait(epoll_fd, events, 16, -1);
+			if (nfds == -1)
+				throw EPOLL_WAIT_FAILURE;
+			for (int n = 0; n < nfds; n++)
+			{
+				if (events[n].data.fd == sock_fd)
+				{
+					int conn_sock = accept(sock_fd, reinterpret_cast<sockaddr*>(&addr), &addrlen);
+					if (conn_sock == -1)
+						throw CANT_ACCEPT_CONNECTION;
+					ev.events = EPOLLIN | EPOLLET;
+					ev.data.fd = conn_sock;
+					if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, conn_sock, &ev) == -1)
+						throw EPOLL_CTL_ADD_FAILURE;
+				}
+				else
+				{
+					char buf[512];
+					int count = recv(events[n].data.fd, buf, sizeof(buf) - 1, 0);
+					if (count <= 0) 
+					{
+						close(events[n].data.fd);
+						continue;
+					}
+
+					buf[count] = '\0';
+					std::cout << "Recu: " << buf << std::endl;
+
+					const char *welcome = ":localhost 001 test :Bienvenue sur mon serveur IRC\r\n";
+					send(events[n].data.fd, welcome, strlen(welcome), 0);
+				}
+			}
 		}
 	}
 
@@ -49,27 +92,19 @@ public:
 
 	void bind_port()
 	{
-		sockaddr_in addr;
-
 		std::memset(&addr, 0, sizeof(addr));
 		addr.sin_family = AF_INET;
 		addr.sin_addr.s_addr = INADDR_ANY;
 		addr.sin_port = htons(port);
-		socklen_t addrlen = sizeof(addr);
+		addrlen = sizeof(addr);
 		if (bind(sock_fd, reinterpret_cast<sockaddr*>(&addr), addrlen) == -1)
-		{
-			close(sock_fd);
 			throw CANT_BIND_TO_PORT;
-		}
 	}
 
 	void listen_socket()
 	{
 		if (listen(sock_fd, SOMAXCONN) == -1)
-		{
-			close(sock_fd);
 			throw CANT_LISTEN_SOCKET;
-		}
 	}
 
 	void create_epoll()
@@ -79,10 +114,7 @@ public:
 		ev.events = EPOLLIN;
 		ev.data.fd = sock_fd;
 		if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, sock_fd, &ev) == -1)
-		{
-			close(sock_fd);
 			throw EPOLL_CTL_ADD_FAILURE;
-		}
 	}
 
 private:
@@ -90,5 +122,7 @@ private:
 	int epoll_fd;
 	int	port;
 	char *password;
+	sockaddr_in addr;
+	socklen_t addrlen;
 	struct epoll_event ev, events[16];
 };
