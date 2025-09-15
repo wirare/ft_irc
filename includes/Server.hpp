@@ -6,19 +6,23 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/09/12 15:27:12 by wirare           ###   ########.fr       */
+/*   Updated: 2025/09/15 19:04:40 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
 #include <cstdlib>
 #include <iostream>
 #include <cstring>
+#include <map>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
 #include <sys/epoll.h>
 #include "Error.hpp"
+#include <Client.hpp>
+
+#define MAX_CLIENT 128
 
 class Server
 {
@@ -43,42 +47,57 @@ public:
 
 	void launch()
 	{
+		std::cout << "Password : " << password << std::endl;
 		int nfds;
 		while (1)
 		{
-			nfds = epoll_wait(epoll_fd, events, 16, -1);
+			nfds = epoll_wait(epoll_fd, events, MAX_CLIENT, -1);
 			if (nfds == -1)
 				throw EPOLL_WAIT_FAILURE;
 			for (int n = 0; n < nfds; n++)
 			{
 				if (events[n].data.fd == sock_fd)
 				{
-					int conn_sock = accept(sock_fd, reinterpret_cast<sockaddr*>(&addr), &addrlen);
-					if (conn_sock == -1)
-						throw CANT_ACCEPT_CONNECTION;
-					ev.events = EPOLLIN | EPOLLET;
-					ev.data.fd = conn_sock;
-					if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, conn_sock, &ev) == -1)
-						throw EPOLL_CTL_ADD_FAILURE;
+					try { handle_connect(); }
+					catch (std::exception &e) { throw e; }
 				}
 				else
-				{
-					char buf[512];
-					int count = recv(events[n].data.fd, buf, sizeof(buf) - 1, 0);
-					if (count <= 0) 
-					{
-						close(events[n].data.fd);
-						continue;
-					}
-
-					buf[count] = '\0';
-					std::cout << "Recu: " << buf << std::endl;
-
-					const char *welcome = ":localhost 001 test :Bienvenue sur mon serveur IRC\r\n";
-					send(events[n].data.fd, welcome, strlen(welcome), 0);
-				}
+					handle_message(n);
 			}
 		}
+	}
+
+	void handle_connect()
+	{
+		int conn_sock = accept(sock_fd, reinterpret_cast<sockaddr*>(&addr), &addrlen);
+		if (conn_sock == -1)
+			throw CANT_ACCEPT_CONNECTION;
+		ev.events = EPOLLIN | EPOLLET;
+		ev.data.fd = conn_sock;
+		if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, conn_sock, &ev) == -1)
+			throw EPOLL_CTL_ADD_FAILURE;
+		clientMap.insert(std::pair<int, Client>(conn_sock, Client(conn_sock)));
+	}
+
+	void handle_message(int n)
+	{
+		char buf[512];
+		Client &client = clientMap.at(events[n].data.fd);
+		int count = recv(client.getFd(), buf, sizeof(buf) - 1, 0);
+		if (count <= 0) 
+		{
+			close(client.getFd());
+			return ;
+		}
+
+		buf[count] = '\0';
+		IrcMessage msg(buf);
+		client.executeCmd(msg);
+		std::cout << "Client number " << client.getFd() << " sent : " << buf << std::endl;
+
+		//const char *welcome = ":localhost 001 test :Bienvenue sur mon serveur IRC\r\n";
+		//send(events[n].data.fd, welcome, strlen(welcome), 0);
+
 	}
 
 	void open_socket()
@@ -124,5 +143,6 @@ private:
 	char *password;
 	sockaddr_in addr;
 	socklen_t addrlen;
-	struct epoll_event ev, events[16];
+	struct epoll_event ev, events[MAX_CLIENT];
+	std::map<int, Client> clientMap;
 };
