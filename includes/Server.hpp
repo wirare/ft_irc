@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/09/15 19:04:40 by wirare           ###   ########.fr       */
+/*   Updated: 2025/09/16 02:59:25 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -14,20 +14,25 @@
 #include <iostream>
 #include <cstring>
 #include <map>
+#include <sstream>
+#include <string>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
 #include <sys/epoll.h>
-#include "Error.hpp"
+#include <Error.hpp>
 #include <Client.hpp>
+#include <Message.hpp>
 
 #define MAX_CLIENT 128
+
 
 class Server
 {
 public:
-	Server(int port, char *password): port(port), password(password)
+	Server() {};
+	Server(int port, char *password): name("localhost"), port(port), password(password)
 	{
 		try
 		{
@@ -92,7 +97,7 @@ public:
 
 		buf[count] = '\0';
 		IrcMessage msg(buf);
-		client.executeCmd(msg);
+		executeCommand(msg, client);
 		std::cout << "Client number " << client.getFd() << " sent : " << buf << std::endl;
 
 		//const char *welcome = ":localhost 001 test :Bienvenue sur mon serveur IRC\r\n";
@@ -136,7 +141,28 @@ public:
 			throw EPOLL_CTL_ADD_FAILURE;
 	}
 
+	inline std::string getErrMsg(int err)
+	{
+		switch (err)
+		{
+			ERR(433);
+			ERR(431);
+			default: return "Unknown Error";
+		}
+	}
+
+	inline void sendError(int err, int fd)
+	{
+		std::ostringstream ossmsg;
+		ossmsg << ":" << name << " " << err << " * :" << getErrMsg(err);
+		std::string msg(ossmsg.str());
+		send(fd, msg.c_str(), msg.size(), 0);
+	}
+
+	std::map<int, Client>& getClientMap() { return clientMap; }
+
 private:
+	std::string name;
 	int sock_fd;
 	int epoll_fd;
 	int	port;
@@ -146,3 +172,5 @@ private:
 	struct epoll_event ev, events[MAX_CLIENT];
 	std::map<int, Client> clientMap;
 };
+
+extern Server server;

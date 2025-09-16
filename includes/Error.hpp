@@ -6,11 +6,13 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:57:59 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/09/12 15:07:51 by wirare           ###   ########.fr       */
+/*   Updated: 2025/09/16 02:27:10 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <stdexcept>
 #include <string>
+#include <sys/socket.h>
+#include <ErrorCode.hpp>
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)

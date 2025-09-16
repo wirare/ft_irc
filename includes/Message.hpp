@@ -3,8 +3,22 @@
 #include <cstring>
 #include <sstream>
 #include <string>
-#include <Command.hpp>
 #include <vector>
+#include <Client.hpp>
+
+typedef enum {
+	UNKNOWN,
+	NICK,
+	USER,
+	JOIN,
+	PART,
+	PRIVMSG,
+	QUIT,
+	KICK,
+	INVITE,
+	TOPIC,
+	MODE
+}	CommandId;
 
 #define cmp(Id) if (std::strcmp(cmd, #Id)) id = Id
 
@@ -53,3 +67,12 @@ class IrcMessage
 		}
 
 };
+
+struct CmdBody
+{
+	CmdBody(Client &client, const IrcMessage& msg): client(client), params(msg.params) {};
+	Client &client;
+	std::vector<std::string> params;
+};
+
+void executeCommand(const IrcMessage &msg, Client &client);

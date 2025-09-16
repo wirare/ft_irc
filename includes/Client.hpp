@@ -2,8 +2,6 @@
 
 #include <string>
 #include <vector>
-#include <Command.hpp>
-#include <Message.hpp>
 
 #define DECLARE(type, var, Var)						\
 	public:											\
@@ -28,11 +26,6 @@ class Client
 		Client(int fd): fd(fd) {};
 		int getFd() const { return fd; };
 	
-		void executeCmd(const IrcMessage &msg)
-		{
-			doCommand(msg.id);
-		};
-		
 	private:
 		int fd;
 		std::vector<int> channels;
