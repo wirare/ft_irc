@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/09/16 02:59:25 by wirare           ###   ########.fr       */
+/*   Updated: 2025/09/17 02:11:18 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -84,6 +84,16 @@ public:
 		clientMap.insert(std::pair<int, Client>(conn_sock, Client(conn_sock)));
 	}
 
+	std::vector<std::string> split_message(char* buf)
+	{
+		std::vector<std::string> tokens;
+		std::string token;
+		std::istringstream tokenStream(buf);
+		while (std::getline(tokenStream, token, '\n'))
+			tokens.push_back(token);
+		return tokens;
+	}
+
 	void handle_message(int n)
 	{
 		char buf[512];
@@ -96,9 +106,14 @@ public:
 		}
 
 		buf[count] = '\0';
-		IrcMessage msg(buf);
-		executeCommand(msg, client);
+		std::vector<std::string> commands = split_message(buf);
+		for (std::vector<std::string>::iterator it = commands.begin(); it != commands.end(); ++it)
+		{
+			IrcMessage msg(it->data());
+			executeCommand(msg, client);
+		}
 		std::cout << "Client number " << client.getFd() << " sent : " << buf << std::endl;
+		std::cout << "Client number " << client.getFd() << " nick : " << client.getNick() << std::endl;
 
 		//const char *welcome = ":localhost 001 test :Bienvenue sur mon serveur IRC\r\n";
 		//send(events[n].data.fd, welcome, strlen(welcome), 0);

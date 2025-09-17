@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <Client.hpp>
+#include <iostream>
 
 typedef enum {
 	UNKNOWN,
@@ -62,7 +63,8 @@ class IrcMessage
 				else if (tokens[i][0] == ':')
 					concat = i;
 			}
-			tokens.resize(concat);
+			if (concat)
+				tokens.resize(concat);
 			return tokens;
 		}
 

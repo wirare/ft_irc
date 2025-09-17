@@ -23,7 +23,7 @@ class Client
 	DECLARE(std::string, realname, Realname);
 	DECLARE(State, state, State);
 	public:
-		Client(int fd): fd(fd) {};
+		Client(int fd): nick("UNSET"), username("UNSET"), realname("UNSET"), fd(fd) {};
 		int getFd() const { return fd; };
 	
 	private:
