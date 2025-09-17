@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/09/17 02:11:18 by wirare           ###   ########.fr       */
+/*   Updated: 2025/09/17 19:42:30 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -32,7 +32,7 @@ class Server
 {
 public:
 	Server() {};
-	Server(int port, char *password): name("localhost"), port(port), password(password)
+	Server(int port, std::string password): name("localhost"), port(port), password(password)
 	{
 		try
 		{
@@ -81,7 +81,9 @@ public:
 		ev.data.fd = conn_sock;
 		if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, conn_sock, &ev) == -1)
 			throw EPOLL_CTL_ADD_FAILURE;
-		clientMap.insert(std::pair<int, Client>(conn_sock, Client(conn_sock)));
+		Client client(conn_sock);
+		client.setState(WAIT_PASS);
+		clientMap.insert(std::pair<int, Client>(conn_sock, client));
 	}
 
 	std::vector<std::string> split_message(char* buf)
@@ -104,17 +106,16 @@ public:
 			close(client.getFd());
 			return ;
 		}
-
+		std::cout << "Client number " << client.getFd() << " sent : " << buf;
 		buf[count] = '\0';
+		if (!*buf)
+			return;
 		std::vector<std::string> commands = split_message(buf);
 		for (std::vector<std::string>::iterator it = commands.begin(); it != commands.end(); ++it)
 		{
 			IrcMessage msg(it->data());
 			executeCommand(msg, client);
 		}
-		std::cout << "Client number " << client.getFd() << " sent : " << buf << std::endl;
-		std::cout << "Client number " << client.getFd() << " nick : " << client.getNick() << std::endl;
-
 		//const char *welcome = ":localhost 001 test :Bienvenue sur mon serveur IRC\r\n";
 		//send(events[n].data.fd, welcome, strlen(welcome), 0);
 
@@ -156,16 +157,6 @@ public:
 			throw EPOLL_CTL_ADD_FAILURE;
 	}
 
-	inline std::string getErrMsg(int err)
-	{
-		switch (err)
-		{
-			ERR(433);
-			ERR(431);
-			default: return "Unknown Error";
-		}
-	}
-
 	inline void sendError(int err, int fd)
 	{
 		std::ostringstream ossmsg;
@@ -174,14 +165,15 @@ public:
 		send(fd, msg.c_str(), msg.size(), 0);
 	}
 
-	std::map<int, Client>& getClientMap() { return clientMap; }
+	inline std::map<int, Client>& getClientMap() { return clientMap; }
+	inline std::string getPassword() const { return password; }
 
 private:
 	std::string name;
 	int sock_fd;
 	int epoll_fd;
 	int	port;
-	char *password;
+	std::string password;
 	sockaddr_in addr;
 	socklen_t addrlen;
 	struct epoll_event ev, events[MAX_CLIENT];

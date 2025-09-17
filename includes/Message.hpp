@@ -18,10 +18,12 @@ typedef enum {
 	KICK,
 	INVITE,
 	TOPIC,
-	MODE
+	MODE,
+	PASS,
+	PING
 }	CommandId;
 
-#define cmp(Id) if (std::strcmp(cmd, #Id)) id = Id
+#define cmp(Id) if (params[0] == #Id) id = Id
 
 class IrcMessage
 {
@@ -29,7 +31,6 @@ class IrcMessage
 		IrcMessage(std::string message)
 		{
 			params = IrcSplit(message);
-			const char *cmd = params[0].c_str();
 			cmp(NICK);
 			else cmp(USER);
 			else cmp(JOIN);
@@ -40,6 +41,8 @@ class IrcMessage
 			else cmp(INVITE);
 			else cmp(TOPIC);
 			else cmp(MODE);
+			else cmp(PASS);
+			else cmp(PING);
 			else id = UNKNOWN;
 		}
 		
@@ -64,7 +67,10 @@ class IrcMessage
 					concat = i;
 			}
 			if (concat)
-				tokens.resize(concat);
+				tokens.resize(concat+1);
+			std::string &last = tokens.back();
+			if (last.at(last.size()-1) == '\r')
+				last.resize(last.size()-1);
 			return tokens;
 		}
 
@@ -76,5 +82,19 @@ struct CmdBody
 	Client &client;
 	std::vector<std::string> params;
 };
+
+inline std::ostream &operator<<(std::ostream &os, CmdBody &body)
+{
+	os << "CmdBody client informations: \n{\n" << body.client;
+	os << "}\nCmdBody params: {";
+	for (std::vector<std::string>::iterator it = body.params.begin(); it != body.params.end(); ++it)
+	{
+		os << it->data();
+		if (it + 1 != body.params.end())
+			os << ", ";
+	}
+	os << "}\n";
+	return os;
+}
 
 void executeCommand(const IrcMessage &msg, Client &client);
