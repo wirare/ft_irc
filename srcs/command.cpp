@@ -2,6 +2,7 @@
 #include <Client.hpp>
 #include <Server.hpp>
 #include <iostream>
+#include <Send.hpp>
 
 #define CALL_LOG(id)\
 	std::cout << "Command "#id" got called\n"
@@ -43,9 +44,7 @@ void cmdPING(CmdBody &body)
 	CALL_LOG(PING);
 	if (body.params.size() <= 1)
 		SEND_ERR(461);
-	std::string msg(":localhost PONG");
-	msg += body.params[1];
-	send(body.client.getFd(), msg.c_str(), msg.size(), 0);
+	SEND("ss", "PONG", body.params[1].c_str());
 }
 
 buildCmd(USER);

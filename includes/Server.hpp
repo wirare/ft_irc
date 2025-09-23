@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/09/23 20:25:32 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/09/23 20:57:29 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -29,8 +29,8 @@
 #include <ctime>
 
 #define MAX_CLIENT 128
-
-#define SEND(...) sendMessage(fd, buildMessage(__VA_ARGS__))
+#define SERVER
+#include <Send.hpp>
 
 class Server
 {
@@ -228,5 +228,6 @@ private:
 	std::map<int, Client> clientMap;
 	time_t startTime;
 };
+#undef SERVER
 
 extern Server server;
