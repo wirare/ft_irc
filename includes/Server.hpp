@@ -6,10 +6,12 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/09/17 19:42:30 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/09/23 20:25:32 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
+#include <cstdarg>
+#include <cstdio>
 #include <cstdlib>
 #include <iostream>
 #include <cstring>
@@ -24,9 +26,11 @@
 #include <Error.hpp>
 #include <Client.hpp>
 #include <Message.hpp>
+#include <ctime>
 
 #define MAX_CLIENT 128
 
+#define SEND(...) sendMessage(fd, buildMessage(__VA_ARGS__))
 
 class Server
 {
@@ -40,6 +44,7 @@ public:
 			bind_port();
 			listen_socket();
 			create_epoll();
+			time(&startTime);
 		}
 		catch (std::exception &e)
 		{
@@ -84,6 +89,7 @@ public:
 		Client client(conn_sock);
 		client.setState(WAIT_PASS);
 		clientMap.insert(std::pair<int, Client>(conn_sock, client));
+		sendSuccessfulRegister(conn_sock);
 	}
 
 	std::vector<std::string> split_message(char* buf)
@@ -116,9 +122,6 @@ public:
 			IrcMessage msg(it->data());
 			executeCommand(msg, client);
 		}
-		//const char *welcome = ":localhost 001 test :Bienvenue sur mon serveur IRC\r\n";
-		//send(events[n].data.fd, welcome, strlen(welcome), 0);
-
 	}
 
 	void open_socket()
@@ -157,12 +160,57 @@ public:
 			throw EPOLL_CTL_ADD_FAILURE;
 	}
 
+	std::string buildMessage(const char *fmt, ...)
+	{
+		va_list args;
+		va_start(args, fmt);
+
+		std::ostringstream oss;
+
+		oss << ":" << name << " ";
+		for (const char* p = fmt; *p; p++)
+		{
+			switch (*p)
+			{
+				case 's':
+				{
+					const std::string &s = va_arg(args, const char*);
+					oss << s;
+					break;
+				}
+				case 'd':
+				{
+					int i = va_arg(args, int);
+					oss << i;
+					break;
+				}
+			}
+		}
+
+		va_end(args);
+		oss << "\r\n";
+		return oss.str();
+	}
+
+	inline void sendMessage(int fd, const std::string &msg)
+	{
+		send(fd, msg.c_str(), msg.size(), 0);
+	}
+
 	inline void sendError(int err, int fd)
 	{
-		std::ostringstream ossmsg;
-		ossmsg << ":" << name << " " << err << " * :" << getErrMsg(err);
-		std::string msg(ossmsg.str());
-		send(fd, msg.c_str(), msg.size(), 0);
+		SEND("dss", err, " * : ", getErrMsg(err).c_str());
+	}
+
+	inline void sendSuccessfulRegister(int fd)
+	{
+		Client client = clientMap.at(fd);
+		const std::string str_nick = client.getNick();
+		const char *nick = str_nick.c_str();
+		SEND("ssssssss", "001 ", nick, " :Welcome to the IRC network ", nick, "!", client.getUsername().c_str(), name.c_str());
+		SEND("ssssss", "002 ", nick, " :Your host is ", name.c_str(), " ,running version", " 1.0");
+		SEND("ssss", "003 ", nick, " :This server was created ", ctime(&startTime));
+		SEND("sssssss", "004 ", nick, " ", name.c_str(), " 1.0", " iow ", "irsk");
 	}
 
 	inline std::map<int, Client>& getClientMap() { return clientMap; }
@@ -178,6 +226,7 @@ private:
 	socklen_t addrlen;
 	struct epoll_event ev, events[MAX_CLIENT];
 	std::map<int, Client> clientMap;
+	time_t startTime;
 };
 
 extern Server server;

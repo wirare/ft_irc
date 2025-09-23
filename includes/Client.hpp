@@ -4,13 +4,6 @@
 #include <vector>
 #include <ostream>
 
-#define DECLARE(type, Var)									\
-	public:													\
-		inline void set##Var(const type &v) { Var = v; };	\
-		inline type get##Var() const { return Var; };		\
-	private:												\
-		type Var											\
-
 typedef enum {
 	NEW,
 	WAIT_PASS,
@@ -19,14 +12,22 @@ typedef enum {
 	AUTH,
 }	State;
 
+#define DECLARE(type, Var)									\
+	public:													\
+		inline void set##Var(const type &v) { Var = v; };	\
+		inline type get##Var() const { return Var; };		\
+	private:												\
+		type Var											\
+
 class Client
 {
 	DECLARE(std::string, Nick);
 	DECLARE(std::string, Username);
 	DECLARE(std::string, Realname);
 	DECLARE(State, State);
+	DECLARE(std::string, LastPass);
 	public:
-		Client(int fd): Nick("UNSET"), Username("UNSET"), Realname("UNSET"), State(NEW), fd(fd) {};
+		Client(int fd): Nick("UNSET"), Username("UNSET"), Realname("UNSET"), State(NEW), LastPass(""), fd(fd) {};
 		int getFd() const { return fd; };
 	
 	private:
@@ -47,6 +48,8 @@ inline std::string state_to_str(State state)
 		STATE(AUTH);
 	}
 }
+
+#undef STATE
 
 inline std::ostream &operator<<(std::ostream &oss, const Client &client)
 {
