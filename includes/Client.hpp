@@ -6,9 +6,7 @@
 
 typedef enum {
 	NEW,
-	WAIT_PASS,
-	WAIT_NICK,
-	WAIT_USER,
+	POST_PASS,
 	AUTH,
 }	State;
 
@@ -26,9 +24,11 @@ class Client
 	DECLARE(std::string, Realname);
 	DECLARE(State, State);
 	DECLARE(std::string, LastPass);
+	DECLARE(bool, SendPass);
+
 	public:
-		Client(int fd): Nick("UNSET"), Username("UNSET"), Realname("UNSET"), State(NEW), LastPass(""), fd(fd) {};
-		int getFd() const { return fd; };
+		Client(int fd): Nick("UNSET"), Username("UNSET"), Realname("UNSET"), State(NEW), LastPass(""), SendPass(false), fd(fd) {};
+		int	getFd() const { return fd; };
 	
 	private:
 		int fd;
@@ -42,9 +42,7 @@ inline std::string state_to_str(State state)
 	switch (state)
 	{
 		STATE(NEW);
-		STATE(WAIT_PASS);
-		STATE(WAIT_NICK);
-		STATE(WAIT_USER);
+		STATE(POST_PASS);
 		STATE(AUTH);
 	}
 }

@@ -15,6 +15,9 @@
 void cmdNICK(CmdBody &body)
 {
 	CALL_LOG(NICK);
+	if (body.client.getLastPass() != server.getPassword())
+		SEND_ERR(464);
+	body.client.setState(POST_PASS);
 	if (body.params.size() <= 1)
 		SEND_ERR(431);
 	std::string nick = body.params[1];
@@ -30,13 +33,11 @@ void cmdNICK(CmdBody &body)
 void cmdPASS(CmdBody &body)
 {
 	CALL_LOG(PASS);
-	if (body.client.getState() != WAIT_PASS)
+	if (body.client.getState() != NEW)
 		SEND_ERR(462);
 	if (body.params.size() <= 1)
 		SEND_ERR(461);
-	if (body.params[1] != server.getPassword())
-		SEND_ERR(464);
-	body.client.setState(WAIT_NICK);
+	body.client.setLastPass(body.params[1]);
 }
 
 void cmdPING(CmdBody &body)

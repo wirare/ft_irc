@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/09/23 20:57:29 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/09/24 19:34:31 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -210,7 +210,7 @@ public:
 		SEND("ssssssss", "001 ", nick, " :Welcome to the IRC network ", nick, "!", client.getUsername().c_str(), name.c_str());
 		SEND("ssssss", "002 ", nick, " :Your host is ", name.c_str(), " ,running version", " 1.0");
 		SEND("ssss", "003 ", nick, " :This server was created ", ctime(&startTime));
-		SEND("sssssss", "004 ", nick, " ", name.c_str(), " 1.0", " iow ", "irsk");
+		SEND("sssssss", "004 ", nick, " ", name.c_str(), " 1.0", " iow", " irsk");
 	}
 
 	inline std::map<int, Client>& getClientMap() { return clientMap; }
