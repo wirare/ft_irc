@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/09/24 19:34:31 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/09/27 21:06:29 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -87,9 +87,7 @@ public:
 		if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, conn_sock, &ev) == -1)
 			throw EPOLL_CTL_ADD_FAILURE;
 		Client client(conn_sock);
-		client.setState(WAIT_PASS);
 		clientMap.insert(std::pair<int, Client>(conn_sock, client));
-		sendSuccessfulRegister(conn_sock);
 	}
 
 	std::vector<std::string> split_message(char* buf)
@@ -168,7 +166,8 @@ public:
 		std::ostringstream oss;
 
 		oss << ":" << name << " ";
-		for (const char* p = fmt; *p; p++)
+		bool	noNl = false;
+		for (const char* p = fmt; *p && !noNl; p++)
 		{
 			switch (*p)
 			{
@@ -184,11 +183,16 @@ public:
 					oss << i;
 					break;
 				}
+				case 'n':
+				{
+					noNl = true;
+					break;
+				}
 			}
 		}
 
 		va_end(args);
-		oss << "\r\n";
+		if (!noNl) oss << "\r\n";
 		return oss.str();
 	}
 
@@ -205,11 +209,12 @@ public:
 	inline void sendSuccessfulRegister(int fd)
 	{
 		Client client = clientMap.at(fd);
+		std::cout << client;
 		const std::string str_nick = client.getNick();
 		const char *nick = str_nick.c_str();
-		SEND("ssssssss", "001 ", nick, " :Welcome to the IRC network ", nick, "!", client.getUsername().c_str(), name.c_str());
-		SEND("ssssss", "002 ", nick, " :Your host is ", name.c_str(), " ,running version", " 1.0");
-		SEND("ssss", "003 ", nick, " :This server was created ", ctime(&startTime));
+		SEND("sssssss", "001 ", nick, " :Welcome to the IRC network ", nick, "!", client.getUsername().c_str(), name.c_str());
+		SEND("ssssss", "002 ", nick, " :Your host is ", name.c_str(), ", running version", " 1.0");
+		SEND("ssssn", "003 ", nick, " :This server was created ", ctime(&startTime));
 		SEND("sssssss", "004 ", nick, " ", name.c_str(), " 1.0", " iow", " irsk");
 	}
 

@@ -48,7 +48,32 @@ void cmdPING(CmdBody &body)
 	SEND("ss", "PONG", body.params[1].c_str());
 }
 
-buildCmd(USER);
+void cmdUSER(CmdBody &body)
+{
+	CALL_LOG(USER);
+	if (body.params.size() <= 4)
+		SEND_ERR(461);
+	if (body.client.getState() != POST_PASS)
+		SEND_ERR(462);
+	
+	body.client.setUsername(body.params[1]);
+
+	//SEND("ss", "Param = ", body.params[4].c_str());
+
+	std::string realName;
+	for (size_t i = 4; i < body.params.size(); i++) {
+		if (i != body.params.size())
+			realName += " ";
+		realName += body.params[i];
+	}
+	if (!realName.empty() && realName[0] == ':')
+		realName.erase(0,1);
+
+	body.client.setRealname(realName);
+	body.client.setState(AUTH);
+	server.sendSuccessfulRegister(body.client.getFd());
+}
+
 buildCmd(JOIN);
 buildCmd(PART);
 buildCmd(PRIVMSG);
