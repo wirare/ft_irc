@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/28 16:44:48 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/09/28 19:02:44 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/09/28 20:25:34 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -26,7 +26,7 @@ typedef enum
 
 typedef enum
 {
-	INVITE,
+	INVITED,
 	OP,
 	NORMAL,
 }	ClientState;
@@ -34,9 +34,10 @@ typedef enum
 class Channel
 {
 	DECLARE(std::string, Topic);
+	DECLARE(std::string, Name);
 
 	public:
-		Channel(const Client &client): Topic("")
+		Channel(const std::string &name, const Client &client): Topic(""), Name(name)
 		{
 			opMap[client] = OP;
 		}

@@ -6,6 +6,7 @@
 #include <vector>
 #include <Client.hpp>
 #include <iostream>
+#include <StringHelper.hpp>
 
 typedef enum {
 	UNKNOWN,
@@ -53,11 +54,7 @@ class IrcMessage
 	private:
 		std::vector<std::string> IrcSplit(const std::string& str)
 		{
-			std::vector<std::string> tokens;
-			std::string token;
-			std::istringstream tokenStream(str);
-			while (std::getline(tokenStream, token, ' '))
-				tokens.push_back(token);
+			std::vector<std::string> tokens = StringHelper::split(str, ' ');
 			int concat = 0;
 			for (int i = 0; i != (int)tokens.size(); i++)
 			{

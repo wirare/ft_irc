@@ -3,6 +3,8 @@
 #include <Server.hpp>
 #include <iostream>
 #include <Send.hpp>
+#include <StringHelper.hpp>
+#include <auto.hpp>
 
 #define CALL_LOG(id)\
 	std::cout << "Command "#id" got called\n"
@@ -21,10 +23,10 @@ void cmdNICK(CmdBody &body)
 	if (body.params.size() <= 1)
 		SEND_ERR(431);
 	std::string nick = body.params[1];
-	std::map<int, Client> &clients = server.getClientMap();
-	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+	std::map<int, Client*> &clients = server.getClientMap();
+	for (auto it = clients.begin(); it != clients.end(); ++it)
 	{
-		if (it->second.getNick() == nick)
+		if (it->second->getNick() == nick)
 			SEND_ERR(433);
 	}
 	body.client.setNick(nick);
@@ -59,7 +61,8 @@ void cmdUSER(CmdBody &body)
 	body.client.setUsername(body.params[1]);
 
 	std::string realName;
-	for (size_t i = 4; i < body.params.size(); i++) {
+	for (size_t i = 4; i < body.params.size(); i++) 
+	{
 		if (i != body.params.size())
 			realName += " ";
 		realName += body.params[i];
@@ -74,7 +77,17 @@ void cmdUSER(CmdBody &body)
 
 void cmdJOIN(CmdBody &body)
 {
+	CALL_LOG(JOIN);
+	if (body.params.size() <= 2)
+		SEND_ERR(461);
+	if (body.client.getState() != AUTH)
+		return ;
 
+	std::vector<std::string> channels = StringHelper::split(body.params[1], ',');
+	for (auto it = channels.begin(); it != channels.end(); it++)
+	{
+		if ()
+	}
 }
 
 buildCmd(PART);

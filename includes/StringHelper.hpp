@@ -1,19 +1,28 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Send.hpp                                           :+:      :+:    :+:   */
+/*   StringHelper.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/09/23 20:50:36 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/09/28 20:14:16 by ellanglo         ###   ########.fr       */
+/*   Created: 2025/09/28 19:39:02 by ellanglo          #+#    #+#             */
+/*   Updated: 2025/09/28 20:05:37 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-#ifdef SEND
-#	undef SEND
-#endif
-#ifdef SERVER
-	#define SEND(...) sendMessage(fd, buildMessage(__VA_ARGS__))
-#else
-	#define SEND(...) server.sendMessage(body.client.getFd(), server.buildMessage(__VA_ARGS__))
-#endif
+#pragma once
+#include <string>
+#include <vector>
+#include <sstream>
+
+namespace StringHelper
+{
+	std::vector<std::string> split(const std::string& str, char c)
+	{
+		std::vector<std::string> tokens;
+		std::string token;
+		std::istringstream tokenStream(str);
+		while (std::getline(tokenStream, token, c))
+			tokens.push_back(token);
+		return tokens;
+	}
+};

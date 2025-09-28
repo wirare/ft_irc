@@ -6,10 +6,11 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/09/28 18:54:13 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/09/28 21:03:24 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
+#include "auto.hpp"
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
@@ -27,6 +28,7 @@
 #include <Client.hpp>
 #include <Message.hpp>
 #include <ctime>
+#include <Channel.hpp>
 
 #define MAX_CLIENT 128
 #define SERVER
@@ -90,20 +92,10 @@ public:
 		clientMap.insert(std::pair<int, Client>(conn_sock, client));
 	}
 
-	std::vector<std::string> split_message(char* buf)
-	{
-		std::vector<std::string> tokens;
-		std::string token;
-		std::istringstream tokenStream(buf);
-		while (std::getline(tokenStream, token, '\n'))
-			tokens.push_back(token);
-		return tokens;
-	}
-
 	void handle_message(int n)
 	{
 		char buf[512];
-		Client &client = clientMap.at(events[n].data.fd);
+		Client &client = *clientMap.at(events[n].data.fd);
 		int count = recv(client.getFd(), buf, sizeof(buf) - 1, 0);
 		if (count <= 0) 
 		{
@@ -114,7 +106,7 @@ public:
 		buf[count] = '\0';
 		if (!*buf)
 			return;
-		std::vector<std::string> commands = split_message(buf);
+		std::vector<std::string> commands = StringHelper::split(buf, '\n');
 		for (std::vector<std::string>::iterator it = commands.begin(); it != commands.end(); ++it)
 		{
 			IrcMessage msg(it->data());
@@ -208,7 +200,7 @@ public:
 
 	inline void sendSuccessfulRegister(int fd)
 	{
-		Client client = clientMap.at(fd);
+		Client &client = *clientMap.at(fd);
 		std::cout << client;
 		const std::string str_nick = client.getNick();
 		const char *nick = str_nick.c_str();
@@ -218,8 +210,17 @@ public:
 		SEND("sssssss", "004 ", nick, " ", name.c_str(), " 1.0", " iow", " irsk");
 	}
 
-	inline std::map<int, Client>& getClientMap() { return clientMap; }
+	inline std::map<int, Client*>& getClientMap() { return clientMap; }
 	inline std::string getPassword() const { return password; }
+	inline Channel *getChannel(const std::string &name)
+	{
+		for (auto it = channelList.begin(); it != channelList.end(); it++)
+		{
+			if ((*it)->getName() == name)
+				return *it;
+		}
+		return NULL;
+	}
 
 private:
 	std::string name;
@@ -230,7 +231,8 @@ private:
 	sockaddr_in addr;
 	socklen_t addrlen;
 	struct epoll_event ev, events[MAX_CLIENT];
-	std::map<int, Client> clientMap;
+	std::map<int, Client*> clientMap;
+	std::vector<Channel*> channelList;
 	time_t startTime;
 };
 #undef SERVER
