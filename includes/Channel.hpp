@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/28 16:44:48 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/09/28 18:17:44 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/09/28 19:02:44 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -24,6 +24,13 @@ typedef enum
 	OP_PRIVILEGE = 1 << 4,
 }	ChannelModeFlag;
 
+typedef enum
+{
+	INVITE,
+	OP,
+	NORMAL,
+}	ClientState;
+
 class Channel
 {
 	DECLARE(std::string, Topic);
@@ -31,7 +38,7 @@ class Channel
 	public:
 		Channel(const Client &client): Topic("")
 		{
-			opMap[client] = true;
+			opMap[client] = OP;
 		}
 		~Channel();
 
@@ -40,6 +47,6 @@ class Channel
 		inline void toggleMode(ChannelModeFlag mode) { channelModes ^= mode; }
 
 	private:
-		std::map<Client, bool> opMap;
+		std::map<Client, ClientState> opMap;
 		int channelModes;
 };
