@@ -58,8 +58,6 @@ void cmdUSER(CmdBody &body)
 	
 	body.client.setUsername(body.params[1]);
 
-	//SEND("ss", "Param = ", body.params[4].c_str());
-
 	std::string realName;
 	for (size_t i = 4; i < body.params.size(); i++) {
 		if (i != body.params.size())
@@ -74,7 +72,11 @@ void cmdUSER(CmdBody &body)
 	server.sendSuccessfulRegister(body.client.getFd());
 }
 
-buildCmd(JOIN);
+void cmdJOIN(CmdBody &body)
+{
+
+}
+
 buildCmd(PART);
 buildCmd(PRIVMSG);
 buildCmd(QUIT);

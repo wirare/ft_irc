@@ -3,19 +3,13 @@
 #include <string>
 #include <vector>
 #include <ostream>
+#include <DeclMacro.hpp>
 
 typedef enum {
 	NEW,
 	POST_PASS,
 	AUTH,
 }	State;
-
-#define DECLARE(type, Var)									\
-	public:													\
-		inline void set##Var(const type &v) { Var = v; };	\
-		inline type get##Var() const { return Var; };		\
-	private:												\
-		type Var											\
 
 class Client
 {
