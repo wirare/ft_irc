@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/09/28 21:03:24 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/09/29 15:21:56 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -220,6 +220,10 @@ public:
 				return *it;
 		}
 		return NULL;
+	}
+	inline void addChannel(Channel &channel)
+	{
+		channelList.push_back(&channel);
 	}
 
 private:

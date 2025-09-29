@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/28 16:44:48 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/09/28 20:25:34 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/09/29 20:10:05 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -14,6 +14,7 @@
 #include <Client.hpp>
 #include <DeclMacro.hpp>
 #include <string>
+#include <auto.hpp>
 
 typedef enum
 {
@@ -31,23 +32,27 @@ typedef enum
 	NORMAL,
 }	ClientState;
 
+#define CHANNEL
 class Channel
 {
 	DECLARE(std::string, Topic);
 	DECLARE(std::string, Name);
+	DECLARE(std::string, Key);
+	DECLARE(unsigned int, UserLimit);
 
 	public:
 		Channel(const std::string &name, const Client &client): Topic(""), Name(name)
 		{
-			opMap[client] = OP;
+			clientMap[client] = OP;
 		}
 		~Channel();
 
-		inline int getChannelModes() const { return channelModes; };
+		inline int getChannelModes() const { return channelModes; }
 		inline bool hasMode(ChannelModeFlag mode) { return channelModes & mode; }
 		inline void toggleMode(ChannelModeFlag mode) { channelModes ^= mode; }
-
+		void addClient(Client &client, ClientState state, const std::string &key = "");
 	private:
-		std::map<Client, ClientState> opMap;
+		std::map<Client, ClientState> clientMap;
 		int channelModes;
 };
+#undef CHANNEL

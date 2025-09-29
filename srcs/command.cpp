@@ -1,3 +1,4 @@
+#include <Channel.hpp>
 #include <Message.hpp>
 #include <Client.hpp>
 #include <Server.hpp>
@@ -5,6 +6,7 @@
 #include <Send.hpp>
 #include <StringHelper.hpp>
 #include <auto.hpp>
+#include <Send.hpp>
 
 #define CALL_LOG(id)\
 	std::cout << "Command "#id" got called\n"
@@ -78,15 +80,26 @@ void cmdUSER(CmdBody &body)
 void cmdJOIN(CmdBody &body)
 {
 	CALL_LOG(JOIN);
-	if (body.params.size() <= 2)
+	if (body.params.size() == 1)
 		SEND_ERR(461);
 	if (body.client.getState() != AUTH)
 		return ;
 
 	std::vector<std::string> channels = StringHelper::split(body.params[1], ',');
-	for (auto it = channels.begin(); it != channels.end(); it++)
+	std::vector<std::string> keys;
+	bool hasKey = body.params.size() >= 3;
+	if (hasKey)
+		keys = StringHelper::split(body.params[2], ',');
+	for (size_t i = 0; i != channels.size(); i++)
 	{
-		if ()
+		Channel *chan = server.getChannel(channels[i]);
+		if (chan)
+			chan->addClient(body.client, NORMAL);
+		else
+		{
+			Channel newChannel(channels[i], body.client);
+			server.addChannel(newChannel);
+		}
 	}
 }
 
