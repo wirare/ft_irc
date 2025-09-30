@@ -21,7 +21,8 @@ typedef enum {
 	TOPIC,
 	MODE,
 	PASS,
-	PING
+	PING,
+	NAMES
 }	CommandId;
 
 #define cmp(Id) if (params[0] == #Id) id = Id
@@ -44,6 +45,7 @@ class IrcMessage
 			else cmp(MODE);
 			else cmp(PASS);
 			else cmp(PING);
+			else cmp(NAMES);
 			else id = UNKNOWN;
 		}
 		
@@ -70,12 +72,12 @@ class IrcMessage
 				last.resize(last.size()-1);
 			return tokens;
 		}
-
 };
 
 struct CmdBody
 {
 	CmdBody(Client &client, const IrcMessage& msg): client(client), params(msg.params) {};
+	CmdBody(Client &client, const std::vector<std::string> &params): client(client), params(params) {};
 	Client &client;
 	std::vector<std::string> params;
 };
@@ -95,3 +97,4 @@ inline std::ostream &operator<<(std::ostream &os, CmdBody &body)
 }
 
 void executeCommand(const IrcMessage &msg, Client &client);
+void executeCommandInternal(CommandId id, std::vector<std::string> msg, Client &client);

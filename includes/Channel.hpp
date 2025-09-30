@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/28 16:44:48 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/09/29 20:10:05 by wirare           ###   ########.fr       */
+/*   Updated: 2025/09/30 20:31:46 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -50,7 +50,9 @@ class Channel
 		inline int getChannelModes() const { return channelModes; }
 		inline bool hasMode(ChannelModeFlag mode) { return channelModes & mode; }
 		inline void toggleMode(ChannelModeFlag mode) { channelModes ^= mode; }
+		inline const std::map<Client, ClientState> getClientMap() const { return clientMap; }
 		void addClient(Client &client, ClientState state, const std::string &key = "");
+
 	private:
 		std::map<Client, ClientState> clientMap;
 		int channelModes;

@@ -12,13 +12,16 @@
 	std::cout << "Command "#id" got called\n"
 
 #define buildCmd(id)				\
-	void cmd##id(CmdBody body) { CALL_LOG(id); (void)body; }
+	void cmd##id(CmdBody body) { (void)body; }
 
-#define CASE(id) case id: cmd##id(body); break;
+#define CALL(id) cmd##id(body)
+#define CASE(id) case id: CALL(id); CALL_LOG(id); break;
 
-void cmdNICK(CmdBody &body)
+#define CMD_DEF(id) \
+	void cmd##id(CmdBody &body)
+
+CMD_DEF(NICK)
 {
-	CALL_LOG(NICK);
 	if (body.client.getLastPass() != server.getPassword())
 		SEND_ERR(464);
 	body.client.setState(POST_PASS);
@@ -34,9 +37,8 @@ void cmdNICK(CmdBody &body)
 	body.client.setNick(nick);
 }
 
-void cmdPASS(CmdBody &body)
+CMD_DEF(PASS)
 {
-	CALL_LOG(PASS);
 	if (body.client.getState() != NEW)
 		SEND_ERR(462);
 	if (body.params.size() <= 1)
@@ -44,17 +46,15 @@ void cmdPASS(CmdBody &body)
 	body.client.setLastPass(body.params[1]);
 }
 
-void cmdPING(CmdBody &body)
+CMD_DEF(PING)
 {
-	CALL_LOG(PING);
 	if (body.params.size() <= 1)
 		SEND_ERR(461);
 	SEND("ss", "PONG", body.params[1].c_str());
 }
 
-void cmdUSER(CmdBody &body)
+CMD_DEF(USER)
 {
-	CALL_LOG(USER);
 	if (body.params.size() <= 4)
 		SEND_ERR(461);
 	if (body.client.getState() != POST_PASS)
@@ -77,9 +77,8 @@ void cmdUSER(CmdBody &body)
 	server.sendSuccessfulRegister(body.client.getFd());
 }
 
-void cmdJOIN(CmdBody &body)
+CMD_DEF(JOIN)
 {
-	CALL_LOG(JOIN);
 	if (body.params.size() == 1)
 		SEND_ERR(461);
 	if (body.client.getState() != AUTH)
@@ -92,14 +91,45 @@ void cmdJOIN(CmdBody &body)
 		keys = StringHelper::split(body.params[2], ',');
 	for (size_t i = 0; i != channels.size(); i++)
 	{
+		if (!StringHelper::checkChannelFormat(channels[i]))
+			SEND_ERR(476, CONTINUE);
 		Channel *chan = server.getChannel(channels[i]);
 		if (chan)
-			chan->addClient(body.client, NORMAL);
+		{
+			if (hasKey && i <= keys.size() - 1)
+				chan->addClient(body.client, NORMAL, keys[i]);
+			else
+				chan->addClient(body.client, NORMAL);
+		}
 		else
 		{
 			Channel newChannel(channels[i], body.client);
 			server.addChannel(newChannel);
 		}
+	}
+}
+
+CMD_DEF(NAMES)
+{
+	if (body.params.size() == 1)
+		SEND_ERR(461);
+	if (body.client.getState() != AUTH)
+		return ;
+
+	std::vector<std::string> channels = StringHelper::split(body.params[1], ',');
+	const std::string &_username = body.client.getUsername();
+	const char *username = _username.c_str();
+
+	for (size_t i = 0; i != channels.size(); i++)
+	{
+		Channel *chan = server.getChannel(channels[i]);
+		if (StringHelper::checkChannelFormat(channels[i]) && chan)
+		{
+			auto clientMap = chan->getClientMap();
+			for (auto it = clientMap.begin(); it != clientMap.end(); it++)
+				SEND("sssss", username, " = ", chan->getName().c_str(), " :", it->first.getNick().c_str());
+		}
+		SEND("ssss", username, " ", chan->getName().c_str(), " :End of /NAMES list");
 	}
 }
 
@@ -112,10 +142,10 @@ buildCmd(TOPIC);
 buildCmd(MODE);
 buildCmd(UNKNOWN);
 
-void executeCommand(const IrcMessage &msg, Client &client)
+void executeCommandInternal(CommandId id, std::vector<std::string> msg, Client &client)
 {
 	CmdBody body(client, msg);
-	switch (msg.id)
+	switch (id)
 	{
 		CASE(NICK)
 		CASE(USER)
@@ -129,6 +159,13 @@ void executeCommand(const IrcMessage &msg, Client &client)
 		CASE(MODE)
 		CASE(PASS)
 		CASE(PING)
+		CASE(NAMES)
 		CASE(UNKNOWN)
 	}
 }
+
+void executeCommand(const IrcMessage &msg, Client &client)
+{
+	executeCommandInternal(msg.id, msg.params, client);
+}
+
