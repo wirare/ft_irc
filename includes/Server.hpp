@@ -6,10 +6,11 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/09/28 18:54:13 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/01 18:09:27 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
+#include "auto.hpp"
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
@@ -27,6 +28,7 @@
 #include <Client.hpp>
 #include <Message.hpp>
 #include <ctime>
+#include <Channel.hpp>
 
 #define MAX_CLIENT 128
 #define SERVER
@@ -90,16 +92,6 @@ public:
 		clientMap.insert(std::pair<int, Client>(conn_sock, client));
 	}
 
-	std::vector<std::string> split_message(char* buf)
-	{
-		std::vector<std::string> tokens;
-		std::string token;
-		std::istringstream tokenStream(buf);
-		while (std::getline(tokenStream, token, '\n'))
-			tokens.push_back(token);
-		return tokens;
-	}
-
 	void handle_message(int n)
 	{
 		char buf[512];
@@ -110,15 +102,18 @@ public:
 			close(client.getFd());
 			return ;
 		}
-		std::cout << "Client number " << client.getFd() << " sent : " << buf;
 		buf[count] = '\0';
 		if (!*buf)
 			return;
-		std::vector<std::string> commands = split_message(buf);
-		for (std::vector<std::string>::iterator it = commands.begin(); it != commands.end(); ++it)
+		std::cout << "Client number " << client.getFd() << " sent : " << buf;
+		std::vector<std::string> commands = StringHelper::split(buf, '\n');
+		for (auto it = commands.begin(); it != commands.end(); ++it)
 		{
 			IrcMessage msg(it->data());
-			executeCommand(msg, client);
+			if (msg.id != UNKNOWN)
+				executeCommand(msg, client);
+			else
+				client.forwardMessage(it->data());
 		}
 	}
 
@@ -165,12 +160,16 @@ public:
 
 		std::ostringstream oss;
 
-		oss << ":" << name << " ";
 		bool	noNl = false;
 		for (const char* p = fmt; *p && !noNl; p++)
 		{
 			switch (*p)
 			{
+				case 'o':
+				{
+					oss << ":" << name << " ";
+					break;
+				}
 				case 's':
 				{
 					const std::string &s = va_arg(args, const char*);
@@ -188,6 +187,11 @@ public:
 					noNl = true;
 					break;
 				}
+				case 'c':
+				{
+					oss << ":";
+					break;
+				}
 			}
 		}
 
@@ -203,23 +207,56 @@ public:
 
 	inline void sendError(int err, int fd)
 	{
-		SEND("dss", err, " * : ", getErrMsg(err).c_str());
+		SEND("odss", err, " * : ", getErrMsg(err).c_str());
 	}
 
 	inline void sendSuccessfulRegister(int fd)
 	{
-		Client client = clientMap.at(fd);
+		Client &client = clientMap.at(fd);
 		std::cout << client;
 		const std::string str_nick = client.getNick();
 		const char *nick = str_nick.c_str();
-		SEND("sssssss", "001 ", nick, " :Welcome to the IRC network ", nick, "!", client.getUsername().c_str(), name.c_str());
-		SEND("ssssss", "002 ", nick, " :Your host is ", name.c_str(), ", running version", " 1.0");
-		SEND("ssssn", "003 ", nick, " :This server was created ", ctime(&startTime));
-		SEND("sssssss", "004 ", nick, " ", name.c_str(), " 1.0", " iow", " irsk");
+		SEND("osssssss", "001 ", nick, " :Welcome to the IRC network ", nick, "!", client.getUsername().c_str(), name.c_str());
+		SEND("ossssss", "002 ", nick, " :Your host is ", name.c_str(), ", running version", " 1.0");
+		SEND("ossssn", "003 ", nick, " :This server was created ", ctime(&startTime));
+		SEND("osssssss", "004 ", nick, " ", name.c_str(), " 1.0", " iow", " irsk");
 	}
 
 	inline std::map<int, Client>& getClientMap() { return clientMap; }
 	inline std::string getPassword() const { return password; }
+	inline bool channelExist(const std::string &name)
+	{
+		for (auto it = channelList.begin(); it != channelList.end(); it++)
+		{
+			if (it->getName() == name)
+				return true;
+		}
+		return false;
+	}
+	inline Channel getChannel(const std::string &name)
+	{
+		for (auto it = channelList.begin(); it != channelList.end(); it++)
+		{
+			if (it->getName() == name)
+				return *it;
+		}
+		__builtin_unreachable();
+	}
+	inline void addChannel(Channel &channel)
+	{
+		channelList.push_back(channel);
+	}
+	inline std::vector<Channel> getClientChannel(const Client &client)
+	{
+		std::vector<Channel> channels;
+		for (auto it = channelList.begin(); it != channelList.end(); it++)
+		{
+			if (it->hasClient(client))
+				channels.push_back(*it);
+		}
+		return channels;
+	}
+	inline int getChannelNumber() const { return channelList.size(); }
 
 private:
 	std::string name;
@@ -231,6 +268,7 @@ private:
 	socklen_t addrlen;
 	struct epoll_event ev, events[MAX_CLIENT];
 	std::map<int, Client> clientMap;
+	std::vector<Channel> channelList;
 	time_t startTime;
 };
 #undef SERVER

@@ -6,6 +6,7 @@
 #include <vector>
 #include <Client.hpp>
 #include <iostream>
+#include <StringHelper.hpp>
 
 typedef enum {
 	UNKNOWN,
@@ -20,7 +21,8 @@ typedef enum {
 	TOPIC,
 	MODE,
 	PASS,
-	PING
+	PING,
+	NAMES
 }	CommandId;
 
 #define cmp(Id) if (params[0] == #Id) id = Id
@@ -43,6 +45,7 @@ class IrcMessage
 			else cmp(MODE);
 			else cmp(PASS);
 			else cmp(PING);
+			else cmp(NAMES);
 			else id = UNKNOWN;
 		}
 		
@@ -53,11 +56,7 @@ class IrcMessage
 	private:
 		std::vector<std::string> IrcSplit(const std::string& str)
 		{
-			std::vector<std::string> tokens;
-			std::string token;
-			std::istringstream tokenStream(str);
-			while (std::getline(tokenStream, token, ' '))
-				tokens.push_back(token);
+			std::vector<std::string> tokens = StringHelper::split(str, ' ');
 			int concat = 0;
 			for (int i = 0; i != (int)tokens.size(); i++)
 			{
@@ -73,12 +72,12 @@ class IrcMessage
 				last.resize(last.size()-1);
 			return tokens;
 		}
-
 };
 
 struct CmdBody
 {
 	CmdBody(Client &client, const IrcMessage& msg): client(client), params(msg.params) {};
+	CmdBody(Client &client, const std::vector<std::string> &params): client(client), params(params) {};
 	Client &client;
 	std::vector<std::string> params;
 };
@@ -98,3 +97,4 @@ inline std::ostream &operator<<(std::ostream &os, CmdBody &body)
 }
 
 void executeCommand(const IrcMessage &msg, Client &client);
+void executeCommandInternal(CommandId id, std::vector<std::string> msg, Client &client);
