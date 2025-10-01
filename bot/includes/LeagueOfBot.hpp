@@ -4,7 +4,11 @@
 #include <iostream>
 #include <fstream>
 #include <exception>
-#include <curl/curl.h>
+#include <cstdlib>
+#include <fstream>
+#include <memory>
+#include <cstdio>
+#include <sstream>
 
 typedef struct s_playerInfo {
     std::string puuid;
