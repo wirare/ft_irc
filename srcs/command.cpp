@@ -28,10 +28,10 @@ CMD_DEF(NICK)
 	if (body.params.size() <= 1)
 		SEND_ERR(431);
 	std::string nick = body.params[1];
-	std::map<int, Client*> &clients = server.getClientMap();
+	std::map<int, Client> &clients = server.getClientMap();
 	for (auto it = clients.begin(); it != clients.end(); ++it)
 	{
-		if (it->second->getNick() == nick)
+		if (it->second.getNick() == nick)
 			SEND_ERR(433);
 	}
 	body.client.setNick(nick);
@@ -93,18 +93,20 @@ CMD_DEF(JOIN)
 	{
 		if (!StringHelper::checkChannelFormat(channels[i]))
 			SEND_ERR(476, CONTINUE);
-		Channel *chan = server.getChannel(channels[i]);
-		if (chan)
+		bool exist = server.channelExist(channels[i]);
+		if (exist)
 		{
+			Channel chan = server.getChannel(channels[i]);
 			if (hasKey && i <= keys.size() - 1)
-				chan->addClient(body.client, NORMAL, keys[i]);
+				chan.addClient(body.client, NORMAL, keys[i]);
 			else
-				chan->addClient(body.client, NORMAL);
+				chan.addClient(body.client, NORMAL);
 		}
 		else
 		{
 			Channel newChannel(channels[i], body.client);
 			server.addChannel(newChannel);
+			newChannel.successfulJoin(body.client);
 		}
 	}
 }
@@ -122,14 +124,15 @@ CMD_DEF(NAMES)
 
 	for (size_t i = 0; i != channels.size(); i++)
 	{
-		Channel *chan = server.getChannel(channels[i]);
-		if (StringHelper::checkChannelFormat(channels[i]) && chan)
+		bool exist = server.channelExist(channels[i]);
+		if (exist && StringHelper::checkChannelFormat(channels[i]))
 		{
-			auto clientMap = chan->getClientMap();
+			Channel chan = server.getChannel(channels[i]);
+			auto clientMap = chan.getClientMap();
 			for (auto it = clientMap.begin(); it != clientMap.end(); it++)
-				SEND("sssss", username, " = ", chan->getName().c_str(), " :", it->first.getNick().c_str());
+				SEND("csssss", username, " = ", chan.getName().c_str(), " :", it->first.getNick().c_str());
 		}
-		SEND("ssss", username, " ", chan->getName().c_str(), " :End of /NAMES list");
+		SEND("cssss", username, " ", channels[i].c_str(), " :End of /NAMES list");
 	}
 }
 

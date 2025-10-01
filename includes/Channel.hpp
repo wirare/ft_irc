@@ -6,10 +6,11 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/28 16:44:48 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/09/30 20:31:46 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/01 17:58:51 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
+#include <iostream>
 #include <map>
 #include <Client.hpp>
 #include <DeclMacro.hpp>
@@ -35,23 +36,32 @@ typedef enum
 #define CHANNEL
 class Channel
 {
+	DECLARE(int, Id);
 	DECLARE(std::string, Topic);
 	DECLARE(std::string, Name);
 	DECLARE(std::string, Key);
 	DECLARE(unsigned int, UserLimit);
 
 	public:
-		Channel(const std::string &name, const Client &client): Topic(""), Name(name)
-		{
-			clientMap[client] = OP;
-		}
-		~Channel();
+		Channel(const std::string name, Client &client);
+		~Channel() {};
 
 		inline int getChannelModes() const { return channelModes; }
 		inline bool hasMode(ChannelModeFlag mode) { return channelModes & mode; }
 		inline void toggleMode(ChannelModeFlag mode) { channelModes ^= mode; }
 		inline const std::map<Client, ClientState> getClientMap() const { return clientMap; }
 		void addClient(Client &client, ClientState state, const std::string &key = "");
+		void successfulJoin(Client &client);
+		inline bool hasClient(const Client &client) const
+		{
+			for (auto it = clientMap.begin(); it != clientMap.end(); it++)
+			{
+				if (it->first == client)
+					return true;
+			}
+			return false;
+		}
+		inline bool operator==(const Channel &other) { return Id == other.Id; } 
 
 	private:
 		std::map<Client, ClientState> clientMap;

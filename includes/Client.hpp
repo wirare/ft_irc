@@ -1,15 +1,18 @@
 #pragma once
 
 #include <string>
-#include <vector>
 #include <ostream>
 #include <DeclMacro.hpp>
+#include <vector>
+#include <algorithm>
 
 typedef enum {
 	NEW,
 	POST_PASS,
 	AUTH,
 }	State;
+
+class Channel;
 
 class Client
 {
@@ -23,10 +26,16 @@ class Client
 	public:
 		Client(int fd): Nick("UNSET"), Username("UNSET"), Realname("UNSET"), State(NEW), LastPass(""), SendPass(false), fd(fd) {};
 		int	getFd() const { return fd; };
+		bool operator<(const Client &other) const { return fd < other.fd; }
+		bool operator==(const Client &other) const { return fd == other.fd; }
+		void forwardMessage(const std::string &msg) const;
+		void addChannel(const Channel &chan) { channelList.push_back(chan); }
+		void delChannel(const Channel &chan) { channelList.erase(std::remove(channelList.begin(), channelList.end(), chan), channelList.end()); }
+		const std::vector<Channel> getChannels() {return channelList; }
 	
 	private:
+		std::vector<Channel> channelList;
 		int fd;
-		std::vector<int> channels;
 };
 
 #define STATE(x) case(x) : return #x

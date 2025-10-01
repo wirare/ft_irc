@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/28 19:39:02 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/09/30 18:03:52 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/01 15:03:33 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -17,7 +17,7 @@
 
 namespace StringHelper
 {
-	std::vector<std::string> split(const std::string& str, char c)
+	inline std::vector<std::string> split(const std::string& str, char c)
 	{
 		std::vector<std::string> tokens;
 		std::string token;
@@ -27,7 +27,7 @@ namespace StringHelper
 		return tokens;
 	}
 
-	bool checkChannelFormat(const std::string& str)
+	inline bool checkChannelFormat(const std::string& str)
 	{
 		if (str[0] != '&')
 			return false;
@@ -38,5 +38,13 @@ namespace StringHelper
 				return false;
 		}
 		return true;
+	}
+
+	inline std::vector<std::string> makeVector(const std::string& str1, const std::string& str2)
+	{
+		std::vector<std::string> v;
+		v.push_back(str1);
+		v.push_back(str2);
+		return v;
 	}
 };
