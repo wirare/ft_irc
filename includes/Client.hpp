@@ -5,6 +5,7 @@
 #include <DeclMacro.hpp>
 #include <vector>
 #include <algorithm>
+#include <ATarget.hpp>
 
 typedef enum {
 	NEW,
@@ -14,7 +15,7 @@ typedef enum {
 
 class Channel;
 
-class Client
+class Client: public ATarget
 {
 	DECLARE(std::string, Nick);
 	DECLARE(std::string, Username);
@@ -24,14 +25,15 @@ class Client
 	DECLARE(bool, SendPass);
 
 	public:
+		Client() {};
 		Client(int fd): Nick("UNSET"), Username("UNSET"), Realname("UNSET"), State(NEW), LastPass(""), SendPass(false), fd(fd) {};
 		int	getFd() const { return fd; };
 		bool operator<(const Client &other) const { return fd < other.fd; }
 		bool operator==(const Client &other) const { return fd == other.fd; }
-		void forwardMessage(const std::string &msg) const;
 		void addChannel(const Channel &chan) { channelList.push_back(chan); }
 		void delChannel(const Channel &chan) { channelList.erase(std::remove(channelList.begin(), channelList.end(), chan), channelList.end()); }
 		const std::vector<Channel> getChannels() {return channelList; }
+		void recvMessage(const Client &client, const std::string &msg) const;
 	
 	private:
 		std::vector<Channel> channelList;

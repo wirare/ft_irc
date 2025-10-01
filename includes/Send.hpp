@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/23 20:50:36 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/01 17:45:50 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/01 23:54:18 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef USEFULL_MACRO
@@ -35,7 +35,7 @@
 	#define SEND(...) server.sendMessage(client.getFd(), server.buildMessage(__VA_ARGS__))
 	#define SEND_ERR(err) {server.sendError(err, client.getFd()); return;}
 #elif defined(CLIENT)
-	#define SEND(fd, ...) server.sendMessage(fd, server.buildMessage(__VA_ARGS__))
+	#define SEND(...) server.sendMessage(fd, server.buildMessage(__VA_ARGS__))
 #else
 	#define SEND(...) server.sendMessage(body.client.getFd(), server.buildMessage(__VA_ARGS__))
 	#define SEND_ERR(err, ...) {server.sendError(err, body.client.getFd()); RETURN(__VA_OPT__(__VA_ARGS__))}

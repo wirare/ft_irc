@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/01 18:09:27 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/02 00:03:13 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -110,10 +110,7 @@ public:
 		for (auto it = commands.begin(); it != commands.end(); ++it)
 		{
 			IrcMessage msg(it->data());
-			if (msg.id != UNKNOWN)
-				executeCommand(msg, client);
-			else
-				client.forwardMessage(it->data());
+			executeCommand(msg, client);
 		}
 	}
 

@@ -1,3 +1,4 @@
+#include "ATarget.hpp"
 #include <Channel.hpp>
 #include <Message.hpp>
 #include <Client.hpp>
@@ -136,8 +137,41 @@ CMD_DEF(NAMES)
 	}
 }
 
+CMD_DEF(PRIVMSG)
+{
+	if (body.params.size() != 3)
+		return;
+
+	std::vector<std::string> targets = StringHelper::split(body.params[1], ',');
+	auto clientMap = server.getClientMap();
+
+	for (auto _target = targets.begin(); _target != targets.end(); _target++)
+	{
+		ATarget *target;
+		bool set = false;
+		for (auto _client = clientMap.begin(); _client != clientMap.end(); _client++)
+		{
+			if (_target->data() == _client->second.getNick())
+			{
+				target = &_client->second;
+				set = true;
+			}
+		}
+		if (!set)
+		{
+			if (server.channelExist(_target->data()))
+			{
+				Channel chan = server.getChannel(_target->data());
+				target = &chan;
+				set = true;
+			}
+		}
+		if (set)
+			target->recvMessage(body.client, body.params[2]);
+	}
+}
+
 buildCmd(PART);
-buildCmd(PRIVMSG);
 buildCmd(QUIT);
 buildCmd(KICK);
 buildCmd(INVITE);

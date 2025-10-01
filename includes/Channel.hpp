@@ -6,11 +6,11 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/28 16:44:48 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/01 17:58:51 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/01 23:38:40 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
-#include <iostream>
+#include <ATarget.hpp>
 #include <map>
 #include <Client.hpp>
 #include <DeclMacro.hpp>
@@ -34,7 +34,7 @@ typedef enum
 }	ClientState;
 
 #define CHANNEL
-class Channel
+class Channel: public ATarget
 {
 	DECLARE(int, Id);
 	DECLARE(std::string, Topic);
@@ -43,6 +43,7 @@ class Channel
 	DECLARE(unsigned int, UserLimit);
 
 	public:
+		Channel() {};
 		Channel(const std::string name, Client &client);
 		~Channel() {};
 
@@ -62,6 +63,7 @@ class Channel
 			return false;
 		}
 		inline bool operator==(const Channel &other) { return Id == other.Id; } 
+		void recvMessage(const Client &client, const std::string &msg) const;
 
 	private:
 		std::map<Client, ClientState> clientMap;
