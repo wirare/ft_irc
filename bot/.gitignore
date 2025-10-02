@@ -1,1 +1,4 @@
 .env
+bot
+.objs
+.vscode

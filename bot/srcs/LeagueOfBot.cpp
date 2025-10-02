@@ -96,7 +96,7 @@ LeagueOfBot::LeagueOfBot() {
     _champId[76] = "Nidalee";
     _champId[895] = "Nilah";
     _champId[56] = "Nocturne";
-    _champId[20] = "	Nunu & Willump";
+    _champId[20] = "Nunu & Willump";
     _champId[2] = "Olaf";
     _champId[61] = "Orianna";
     _champId[516] = "Ornn";
@@ -183,11 +183,94 @@ LeagueOfBot::LeagueOfBot() {
     if (fdEnv.rdstate() == std::ios_base::eofbit)
         throw std::runtime_error("Can't found the API key");
     _apiKey = line.c_str() + 8;
-    _Info.region = "europe";
-    _Info.playerTag = "SAGA";
-    _Info.playerName = "I have no enemy";
+    _Info.playerTag = "EUW";
+    _Info.playerName = "Wirareee";
+    _pos = 0;
 }
 
 LeagueOfBot::~LeagueOfBot() {
 
+}
+
+std::string LeagueOfBot::getKey(std::string &buffer, const std::string &key) {
+    std::string toFind = '\"' + key + '\"';
+
+    _pos = buffer.find(toFind, _pos);
+    if (_pos == std::string::npos)
+        return "ERROR";
+    _pos += toFind.size();
+
+    while (_pos < buffer.size() && (buffer[_pos] == ' ' || buffer[_pos] == '\t'))
+        _pos++;
+
+    if (buffer[_pos] == ':') {
+        _pos++;
+        while (_pos < buffer.size() && (buffer[_pos] == ' ' || buffer[_pos] == '\t'))
+            _pos++;
+        if (buffer[_pos] == '"') {
+            _pos++;
+            size_t end = buffer.find('"', _pos);
+            std::string returnVal = buffer.substr(_pos, end - _pos);
+            _pos = end;
+            return returnVal;
+        }
+        else if (isdigit(buffer[_pos])) {
+            size_t end = _pos;
+            while (_pos < buffer.size() && isdigit(buffer[end]))
+                end++;
+            std::string returnVal = buffer.substr(_pos, end - _pos);
+            _pos = end;
+            return returnVal;
+        }
+    }
+    return "NIL";
+}
+
+void LeagueOfBot::getPuuid() {
+    std::string buffer; 
+    std::string curlUrl = "curl -s \'https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/" + checkForSpace(_Info.playerName) + "/" + _Info.playerTag +  "?api_key=" + _apiKey + "\'";
+
+    FILE* pipe(popen(curlUrl.c_str(), "r"));
+    if (!pipe) {
+        std::cerr << "Impossible d'ouvrir le pipe curl\n";
+        return;
+    }
+    char chunk[128];
+    while (fgets(chunk, sizeof(chunk), pipe) != NULL) {
+        buffer += chunk;
+    }
+    pclose(pipe);
+    _Info.puuid = getKey(buffer, "puuid");
+
+    _pos = 0;
+}
+
+void LeagueOfBot::getAllMastery() {
+    std::string buffer; 
+    std::string curlUrl = "curl -s 'https://euw1.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/" + _Info.puuid + "?api_key=" + _apiKey + "\'";
+
+    FILE* pipe(popen(curlUrl.c_str(), "r"));
+    if (!pipe) {
+        std::cerr << "Impossible d'ouvrir le pipe curl\n";
+        return;
+    }
+    char chunk[128];
+    while (fgets(chunk, sizeof(chunk), pipe) != NULL) {
+        buffer += chunk;
+    }
+    pclose(pipe);
+
+    std::string champId;
+    std::string champName;
+    std::string champPoint;
+    int i = 1;
+    while (_pos < buffer.size()) {
+        champId = getKey(buffer, "championId");
+        if (champId == "ERROR")
+            break;
+        champName = _champId[atoi(champId.c_str())];
+        champPoint = getKey(buffer, "championPoints");
+        std::cout << "Champion nº" << i << " = " << champName << " | number of point = " << champPoint << '\n';
+        i++;
+    }
 }
