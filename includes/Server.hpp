@@ -6,11 +6,12 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/02 00:03:13 by wirare           ###   ########.fr       */
+/*   Updated: 2025/10/02 18:50:18 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
 #include "auto.hpp"
+#include <cassert>
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
@@ -223,37 +224,31 @@ public:
 	inline std::string getPassword() const { return password; }
 	inline bool channelExist(const std::string &name)
 	{
-		for (auto it = channelList.begin(); it != channelList.end(); it++)
-		{
-			if (it->getName() == name)
-				return true;
-		}
-		return false;
+		auto chan = channelMap.find(name);
+		if (chan == channelMap.end())
+			return false;
+		return true;
 	}
-	inline Channel getChannel(const std::string &name)
+	inline Channel &getChannel(const std::string &name)
 	{
-		for (auto it = channelList.begin(); it != channelList.end(); it++)
-		{
-			if (it->getName() == name)
-				return *it;
-		}
+		return channelMap.find(name)->second;
 		__builtin_unreachable();
 	}
-	inline void addChannel(Channel &channel)
+	inline void addChannel(const std::string name)
 	{
-		channelList.push_back(channel);
+		channelMap[name] = Channel(name);
 	}
 	inline std::vector<Channel> getClientChannel(const Client &client)
 	{
 		std::vector<Channel> channels;
-		for (auto it = channelList.begin(); it != channelList.end(); it++)
+		for (auto it = channelMap.begin(); it != channelMap.end(); it++)
 		{
-			if (it->hasClient(client))
-				channels.push_back(*it);
+			if (it->second.hasClient(client))
+				channels.push_back(it->second);
 		}
 		return channels;
 	}
-	inline int getChannelNumber() const { return channelList.size(); }
+	inline int getChannelNumber() const { return channelMap.size(); }
 
 private:
 	std::string name;
@@ -265,7 +260,7 @@ private:
 	socklen_t addrlen;
 	struct epoll_event ev, events[MAX_CLIENT];
 	std::map<int, Client> clientMap;
-	std::vector<Channel> channelList;
+	std::map<std::string, Channel> channelMap;
 	time_t startTime;
 };
 #undef SERVER

@@ -30,13 +30,9 @@ class Client: public ATarget
 		int	getFd() const { return fd; };
 		bool operator<(const Client &other) const { return fd < other.fd; }
 		bool operator==(const Client &other) const { return fd == other.fd; }
-		void addChannel(const Channel &chan) { channelList.push_back(chan); }
-		void delChannel(const Channel &chan) { channelList.erase(std::remove(channelList.begin(), channelList.end(), chan), channelList.end()); }
-		const std::vector<Channel> getChannels() {return channelList; }
 		void recvMessage(const Client &client, const std::string &msg) const;
 	
 	private:
-		std::vector<Channel> channelList;
 		int fd;
 };
 

@@ -6,11 +6,12 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/28 16:44:48 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/01 23:38:40 by wirare           ###   ########.fr       */
+/*   Updated: 2025/10/02 18:41:34 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
 #include <ATarget.hpp>
+#include <iostream>
 #include <map>
 #include <Client.hpp>
 #include <DeclMacro.hpp>
@@ -44,8 +45,8 @@ class Channel: public ATarget
 
 	public:
 		Channel() {};
-		Channel(const std::string name, Client &client);
-		~Channel() {};
+		Channel(const std::string name);
+		~Channel() { std::cerr << "Channel::~Channel this=" << this << " name=" << Name << "\n"; }
 
 		inline int getChannelModes() const { return channelModes; }
 		inline bool hasMode(ChannelModeFlag mode) { return channelModes & mode; }
@@ -67,6 +68,8 @@ class Channel: public ATarget
 
 	private:
 		std::map<Client, ClientState> clientMap;
-		int channelModes;
+		int channelModes;    
+		Channel(const Channel&);
+		Channel& operator=(const Channel&);
 };
 #undef CHANNEL

@@ -97,7 +97,7 @@ CMD_DEF(JOIN)
 		bool exist = server.channelExist(channels[i]);
 		if (exist)
 		{
-			Channel chan = server.getChannel(channels[i]);
+			Channel &chan = server.getChannel(channels[i]);
 			if (hasKey && i <= keys.size() - 1)
 				chan.addClient(body.client, NORMAL, keys[i]);
 			else
@@ -105,8 +105,8 @@ CMD_DEF(JOIN)
 		}
 		else
 		{
-			Channel newChannel(channels[i], body.client);
-			server.addChannel(newChannel);
+			newChannel.addClient(body.client, OP);
+			server.addChannel(channels[i]);
 			newChannel.successfulJoin(body.client);
 		}
 	}
@@ -128,7 +128,7 @@ CMD_DEF(NAMES)
 		bool exist = server.channelExist(channels[i]);
 		if (exist && StringHelper::checkChannelFormat(channels[i]))
 		{
-			Channel chan = server.getChannel(channels[i]);
+			Channel &chan = server.getChannel(channels[i]);
 			auto clientMap = chan.getClientMap();
 			for (auto it = clientMap.begin(); it != clientMap.end(); it++)
 				SEND("csssss", username, " = ", chan.getName().c_str(), " :", it->first.getNick().c_str());
@@ -143,7 +143,7 @@ CMD_DEF(PRIVMSG)
 		return;
 
 	std::vector<std::string> targets = StringHelper::split(body.params[1], ',');
-	auto clientMap = server.getClientMap();
+	std::map<int, Client> &clientMap = server.getClientMap();
 
 	for (auto _target = targets.begin(); _target != targets.end(); _target++)
 	{
@@ -161,13 +161,15 @@ CMD_DEF(PRIVMSG)
 		{
 			if (server.channelExist(_target->data()))
 			{
-				Channel chan = server.getChannel(_target->data());
+				Channel &chan = server.getChannel(_target->data());
 				target = &chan;
 				set = true;
 			}
 		}
 		if (set)
+		{
 			target->recvMessage(body.client, body.params[2]);
+		}
 	}
 }
 
