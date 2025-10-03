@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/02 18:50:18 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/03 17:34:29 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -229,22 +229,27 @@ public:
 			return false;
 		return true;
 	}
+
 	inline Channel &getChannel(const std::string &name)
 	{
 		return channelMap.find(name)->second;
 		__builtin_unreachable();
 	}
-	inline void addChannel(const std::string name)
+
+	inline Channel* createChannel(const std::string &name) 
 	{
-		channelMap[name] = Channel(name);
+		std::pair<std::map<std::string, Channel>::iterator, bool> p =
+			channelMap.insert(std::make_pair(name, Channel(name)));
+		return &p.first->second;
 	}
-	inline std::vector<Channel> getClientChannel(const Client &client)
+
+	inline std::vector<Channel *> getClientChannel(const Client &client)
 	{
-		std::vector<Channel> channels;
+		std::vector<Channel *> channels;
 		for (auto it = channelMap.begin(); it != channelMap.end(); it++)
 		{
 			if (it->second.hasClient(client))
-				channels.push_back(it->second);
+				channels.push_back(&it->second);
 		}
 		return channels;
 	}

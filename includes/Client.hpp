@@ -3,8 +3,6 @@
 #include <string>
 #include <ostream>
 #include <DeclMacro.hpp>
-#include <vector>
-#include <algorithm>
 #include <ATarget.hpp>
 
 typedef enum {
@@ -27,9 +25,10 @@ class Client: public ATarget
 	public:
 		Client() {};
 		Client(int fd): Nick("UNSET"), Username("UNSET"), Realname("UNSET"), State(NEW), LastPass(""), SendPass(false), fd(fd) {};
-		int	getFd() const { return fd; };
-		bool operator<(const Client &other) const { return fd < other.fd; }
-		bool operator==(const Client &other) const { return fd == other.fd; }
+		inline int	getFd() const { return fd; };
+		inline bool operator<(const Client &other) const { return fd < other.fd; }
+		inline bool operator==(const Client &other) const { return fd == other.fd; }
+		inline bool operator!=(const Client &other) const { return fd != other.fd; }
 		void recvMessage(const Client &client, const std::string &msg) const;
 	
 	private:

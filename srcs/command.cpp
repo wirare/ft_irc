@@ -105,7 +105,6 @@ CMD_DEF(JOIN)
 		}
 		else
 		{
-			newChannel.addClient(body.client, OP);
 			server.addChannel(channels[i]);
 			newChannel.successfulJoin(body.client);
 		}

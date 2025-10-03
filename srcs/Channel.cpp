@@ -6,7 +6,7 @@
 /*   By: wirare <wirare@42angouleme.fr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 19:22:04 by wirare            #+#    #+#             */
-/*   Updated: 2025/10/02 18:42:05 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/03 17:34:24 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <StringHelper.hpp>
@@ -16,7 +16,7 @@
 #define CHANNEL
 #include <Send.hpp>
 
-Channel::Channel(const std::string name): Topic(""), Name(name), channelModes(0)
+Channel::Channel(const std::string &name): Topic(""), Name(name), channelModes(0)
 {
 	Id = server.getChannelNumber();
 }
@@ -34,7 +34,6 @@ void Channel::addClient(Client &client, ClientState state, const std::string &ke
 			SEND_ERR(473);
 	}
 	clientMap[client] = state;
-	client.addChannel(this);
 	successfulJoin(client);
 }
 
@@ -50,7 +49,7 @@ void Channel::recvMessage(const Client &sender, const std::string &msg) const
 	for (auto _client = clientMap.begin(); _client != clientMap.end(); _client++)
 	{
 		const Client &client = _client->first;
-		if (client.getFd() != sender.getFd())
+		if (client != sender)
 			SEND("csssss", sender.getUsername().c_str(), " PRIVMSG ", Name.c_str(), " ", msg.c_str());
 	}
 }
