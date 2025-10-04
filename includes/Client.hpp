@@ -29,7 +29,7 @@ class Client: public ATarget
 		inline bool operator<(const Client &other) const { return fd < other.fd; }
 		inline bool operator==(const Client &other) const { return fd == other.fd; }
 		inline bool operator!=(const Client &other) const { return fd != other.fd; }
-		void recvMessage(const Client &client, const std::string &msg) const;
+		void recvMessage(const Client *client, const std::string &msg) const;
 	
 	private:
 		int fd;

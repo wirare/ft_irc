@@ -76,9 +76,9 @@ class IrcMessage
 
 struct CmdBody
 {
-	CmdBody(Client &client, const IrcMessage& msg): client(client), params(msg.params) {};
-	CmdBody(Client &client, const std::vector<std::string> &params): client(client), params(params) {};
-	Client &client;
+	CmdBody(Client *client, const IrcMessage& msg): client(client), params(msg.params) {};
+	CmdBody(Client *client, const std::vector<std::string> &params): client(client), params(params) {};
+	Client *client;
 	std::vector<std::string> params;
 };
 
@@ -96,5 +96,5 @@ inline std::ostream &operator<<(std::ostream &os, CmdBody &body)
 	return os;
 }
 
-void executeCommand(const IrcMessage &msg, Client &client);
-void executeCommandInternal(CommandId id, std::vector<std::string> msg, Client &client);
+void executeCommand(const IrcMessage &msg, Client *client);
+void executeCommandInternal(CommandId id, std::vector<std::string> msg, Client *client);

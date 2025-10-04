@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/03 17:34:29 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/04 15:56:58 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -39,6 +39,13 @@ class Server
 {
 public:
 	Server() {};
+	~Server() 
+	{
+		for (auto it = channelMap.begin(); it != channelMap.end(); it++)
+			delete it->second;
+		for (auto it = clientMap.begin(); it != clientMap.end(); it++)
+			delete it->second;
+	};
 	Server(int port, std::string password): name("localhost"), port(port), password(password)
 	{
 		try
@@ -89,24 +96,26 @@ public:
 		ev.data.fd = conn_sock;
 		if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, conn_sock, &ev) == -1)
 			throw EPOLL_CTL_ADD_FAILURE;
-		Client client(conn_sock);
-		clientMap.insert(std::pair<int, Client>(conn_sock, client));
+		Client *client = new Client(conn_sock);
+		clientMap.insert(std::pair<int, Client*>(conn_sock, client));
 	}
 
 	void handle_message(int n)
 	{
 		char buf[512];
-		Client &client = clientMap.at(events[n].data.fd);
-		int count = recv(client.getFd(), buf, sizeof(buf) - 1, 0);
+		Client *client = clientMap.at(events[n].data.fd);
+		int count = recv(client->getFd(), buf, sizeof(buf) - 1, 0);
 		if (count <= 0) 
 		{
-			close(client.getFd());
+			close(client->getFd());
+			clientMap.erase(client->getFd());
+			delete client;
 			return ;
 		}
 		buf[count] = '\0';
 		if (!*buf)
 			return;
-		std::cout << "Client number " << client.getFd() << " sent : " << buf;
+		std::cout << "Client number " << client->getFd() << " sent : " << buf;
 		std::vector<std::string> commands = StringHelper::split(buf, '\n');
 		for (auto it = commands.begin(); it != commands.end(); ++it)
 		{
@@ -210,46 +219,45 @@ public:
 
 	inline void sendSuccessfulRegister(int fd)
 	{
-		Client &client = clientMap.at(fd);
-		std::cout << client;
-		const std::string str_nick = client.getNick();
+		Client *client = clientMap.at(fd);
+		const std::string str_nick = client->getNick();
 		const char *nick = str_nick.c_str();
-		SEND("osssssss", "001 ", nick, " :Welcome to the IRC network ", nick, "!", client.getUsername().c_str(), name.c_str());
+		SEND("osssssss", "001 ", nick, " :Welcome to the IRC network ", nick, "!", client->getUsername().c_str(), name.c_str());
 		SEND("ossssss", "002 ", nick, " :Your host is ", name.c_str(), ", running version", " 1.0");
 		SEND("ossssn", "003 ", nick, " :This server was created ", ctime(&startTime));
 		SEND("osssssss", "004 ", nick, " ", name.c_str(), " 1.0", " iow", " irsk");
 	}
 
-	inline std::map<int, Client>& getClientMap() { return clientMap; }
+	inline std::map<int, Client*>& getClientMap() { return clientMap; }
 	inline std::string getPassword() const { return password; }
-	inline bool channelExist(const std::string &name)
+	inline Channel *getChannel(const std::string &name)
 	{
 		auto chan = channelMap.find(name);
-		if (chan == channelMap.end())
-			return false;
-		return true;
-	}
-
-	inline Channel &getChannel(const std::string &name)
-	{
-		return channelMap.find(name)->second;
-		__builtin_unreachable();
+		if (chan != channelMap.end())
+			return chan->second;
+		return NULL;
 	}
 
 	inline Channel* createChannel(const std::string &name) 
 	{
-		std::pair<std::map<std::string, Channel>::iterator, bool> p =
-			channelMap.insert(std::make_pair(name, Channel(name)));
-		return &p.first->second;
+		Channel *chan = new Channel(name);
+		channelMap[name] = chan;
+		return chan;
 	}
 
-	inline std::vector<Channel *> getClientChannel(const Client &client)
+	inline void deleteChannel(Channel *chan)
+	{
+		channelMap.erase(chan->getName());
+		delete chan;
+	}
+
+	inline std::vector<Channel *> getClientChannel(const Client *client)
 	{
 		std::vector<Channel *> channels;
 		for (auto it = channelMap.begin(); it != channelMap.end(); it++)
 		{
-			if (it->second.hasClient(client))
-				channels.push_back(&it->second);
+			if (it->second->hasClient(client))
+				channels.push_back(it->second);
 		}
 		return channels;
 	}
@@ -264,8 +272,8 @@ private:
 	sockaddr_in addr;
 	socklen_t addrlen;
 	struct epoll_event ev, events[MAX_CLIENT];
-	std::map<int, Client> clientMap;
-	std::map<std::string, Channel> channelMap;
+	std::map<int, Client*> clientMap;
+	std::map<std::string, Channel*> channelMap;
 	time_t startTime;
 };
 #undef SERVER

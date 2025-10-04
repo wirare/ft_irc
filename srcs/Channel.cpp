@@ -6,7 +6,7 @@
 /*   By: wirare <wirare@42angouleme.fr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 19:22:04 by wirare            #+#    #+#             */
-/*   Updated: 2025/10/03 17:34:24 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/04 15:42:47 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <StringHelper.hpp>
@@ -21,7 +21,7 @@ Channel::Channel(const std::string &name): Topic(""), Name(name), channelModes(0
 	Id = server.getChannelNumber();
 }
 
-void Channel::addClient(Client &client, ClientState state, const std::string &key)
+void Channel::addClient(Client *client, ClientState state, const std::string &key)
 {
 	if (hasMode(USER_LIMIT) && clientMap.size() >= UserLimit)
 		SEND_ERR(471);
@@ -37,20 +37,20 @@ void Channel::addClient(Client &client, ClientState state, const std::string &ke
 	successfulJoin(client);
 }
 
-void Channel::successfulJoin(Client &client)
+void Channel::successfulJoin(Client *client)
 {
-	SEND("csss", client.getUsername().c_str(), " JOIN ", Name.c_str());
-	SEND("csssss", client.getUsername().c_str(), " ", Name.c_str(), ":", Topic.c_str());
+	SEND("csss", client->getUsername().c_str(), " JOIN ", Name.c_str());
+	SEND("csssss", client->getUsername().c_str(), " ", Name.c_str(), ":", Topic.c_str());
 	executeCommandInternal(NAMES, StringHelper::makeVector("NAMES ", Name), client);
 }
 
-void Channel::recvMessage(const Client &sender, const std::string &msg) const
+void Channel::recvMessage(const Client *sender, const std::string &msg) const
 {
 	for (auto _client = clientMap.begin(); _client != clientMap.end(); _client++)
 	{
-		const Client &client = _client->first;
+		const Client *client = _client->first;
 		if (client != sender)
-			SEND("csssss", sender.getUsername().c_str(), " PRIVMSG ", Name.c_str(), " ", msg.c_str());
+			SEND("csssss", sender->getUsername().c_str(), " PRIVMSG ", Name.c_str(), " ", msg.c_str());
 	}
 }
 #undef CHANNEL
