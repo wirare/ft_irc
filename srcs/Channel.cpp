@@ -6,7 +6,7 @@
 /*   By: wirare <wirare@42angouleme.fr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 19:22:04 by wirare            #+#    #+#             */
-/*   Updated: 2025/10/04 15:42:47 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/06 12:59:13 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <StringHelper.hpp>
@@ -40,7 +40,7 @@ void Channel::addClient(Client *client, ClientState state, const std::string &ke
 void Channel::successfulJoin(Client *client)
 {
 	SEND("csss", client->getUsername().c_str(), " JOIN ", Name.c_str());
-	SEND("csssss", client->getUsername().c_str(), " ", Name.c_str(), ":", Topic.c_str());
+	SEND("sssss", client->getUsername().c_str(), " ", Name.c_str(), ":", Topic.c_str());
 	executeCommandInternal(NAMES, StringHelper::makeVector("NAMES ", Name), client);
 }
 

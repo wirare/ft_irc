@@ -8,6 +8,7 @@
 #include <StringHelper.hpp>
 #include <auto.hpp>
 #include <Send.hpp>
+#include <RPL_list.hpp>
 
 #define CALL_LOG(id)\
 	std::cout << "Command "#id" got called\n"
@@ -106,7 +107,6 @@ CMD_DEF(JOIN)
 		{
 			Channel *newChan = server.createChannel(channels[i]);
 			newChan->addClient(body.client, OP);
-			newChan->successfulJoin(body.client);
 		}
 	}
 }
@@ -125,13 +125,15 @@ CMD_DEF(NAMES)
 	for (size_t i = 0; i != channels.size(); i++)
 	{
 		Channel *chan = server.getChannel(channels[i]);
-		if (chan && StringHelper::checkChannelFormat(channels[i]))
-		{
-			auto clientMap = chan->getClientMap();
-			for (auto it = clientMap.begin(); it != clientMap.end(); it++)
-				SEND("csssss", username, " = ", chan->getName().c_str(), " :", it->first->getNick().c_str());
-		}
-		SEND("cssss", username, " ", channels[i].c_str(), " :End of /NAMES list");
+		if (!chan)
+			continue;
+		auto clientMap = chan->getClientMap();
+		std::string msg(username);
+		msg += " = " + chan->getName() + " :";
+		for (auto it = clientMap.begin(); it != clientMap.end(); it++)
+			msg += " " + it->first->getNick();
+		SEND("odss", RPL_NAMEREPLY, " ", msg.c_str());
+		SEND("odsssss", RPL_ENDOFNAMES, " ", username, " ", channels[i].c_str(), " :End of /NAMES list");
 	}
 }
 
@@ -165,9 +167,7 @@ CMD_DEF(PRIVMSG)
 			}
 		}
 		if (set)
-		{
 			target->recvMessage(body.client, body.params[2]);
-		}
 	}
 }
 
