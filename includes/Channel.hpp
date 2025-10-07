@@ -6,11 +6,13 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/28 16:44:48 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/01 17:58:51 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/07 17:28:59 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
+#include <ATarget.hpp>
 #include <iostream>
+#include <vector>
 #include <map>
 #include <Client.hpp>
 #include <DeclMacro.hpp>
@@ -34,7 +36,7 @@ typedef enum
 }	ClientState;
 
 #define CHANNEL
-class Channel
+class Channel: public ATarget
 {
 	DECLARE(int, Id);
 	DECLARE(std::string, Topic);
@@ -43,16 +45,17 @@ class Channel
 	DECLARE(unsigned int, UserLimit);
 
 	public:
-		Channel(const std::string name, Client &client);
+		Channel() {};
+		Channel(const std::string &name);
 		~Channel() {};
 
 		inline int getChannelModes() const { return channelModes; }
 		inline bool hasMode(ChannelModeFlag mode) { return channelModes & mode; }
 		inline void toggleMode(ChannelModeFlag mode) { channelModes ^= mode; }
-		inline const std::map<Client, ClientState> getClientMap() const { return clientMap; }
-		void addClient(Client &client, ClientState state, const std::string &key = "");
-		void successfulJoin(Client &client);
-		inline bool hasClient(const Client &client) const
+		inline const std::map<Client*, ClientState> getClientMap() const { return clientMap; }
+		void addClient(Client *client, ClientState state, const std::string &key = "");
+		void successfulJoin(Client *client);
+		inline bool hasClient(const Client *client) const
 		{
 			for (auto it = clientMap.begin(); it != clientMap.end(); it++)
 			{
@@ -62,9 +65,14 @@ class Channel
 			return false;
 		}
 		inline bool operator==(const Channel &other) { return Id == other.Id; } 
+		void recvMessage(Client *client, const std::string &msg) const;
+		void broadcast(const std::string &msg, Client *sender) const;
+		void broadcast(const std::string &msg, const std::vector<Client *> &exceptions = std::vector<Client *>()) const;
 
 	private:
-		std::map<Client, ClientState> clientMap;
-		int channelModes;
+		std::map<Client*, ClientState> clientMap;
+		int channelModes;    
+		Channel(const Channel&);
+		Channel& operator=(const Channel&);
 };
 #undef CHANNEL

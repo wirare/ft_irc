@@ -6,24 +6,24 @@
 /*   By: wirare <wirare@42angouleme.fr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 19:22:04 by wirare            #+#    #+#             */
-/*   Updated: 2025/10/01 18:01:48 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/07 17:37:21 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <StringHelper.hpp>
 #include <Message.hpp>
 #include <Channel.hpp>
 #include <Server.hpp>
+#include <RPL_list.hpp>
+#include <algorithm>
 #define CHANNEL
 #include <Send.hpp>
 
-Channel::Channel(const std::string name, Client &client): Topic(""), Name(name), channelModes(0)
+Channel::Channel(const std::string &name): Topic(""), Name(name), channelModes(0)
 {
 	Id = server.getChannelNumber();
-	clientMap[client] = OP;
-	client.addChannel(*this);
 }
 
-void Channel::addClient(Client &client, ClientState state, const std::string &key)
+void Channel::addClient(Client *client, ClientState state, const std::string &key)
 {
 	if (hasMode(USER_LIMIT) && clientMap.size() >= UserLimit)
 		SEND_ERR(471);
@@ -36,15 +36,44 @@ void Channel::addClient(Client &client, ClientState state, const std::string &ke
 			SEND_ERR(473);
 	}
 	clientMap[client] = state;
-	client.addChannel(*this);
 	successfulJoin(client);
 }
 
-void Channel::successfulJoin(Client &client)
+void Channel::successfulJoin(Client *client)
 {
-	SEND("ssss", ":", client.getUsername().c_str(), " JOIN ", Name.c_str());
-	SEND("ssssss", ":", client.getUsername().c_str(), " ", Name.c_str(), ":", Topic.c_str());
+	std::string msg = SEND("csss", client->getUsername().c_str(), " JOIN ", Name.c_str());
+	SEND("odssssss", RPL_TOPIC, " ", client->getUsername().c_str(), " ", Name.c_str(), " :", Topic.c_str());
 	executeCommandInternal(NAMES, StringHelper::makeVector("NAMES ", Name), client);
+	broadcast(msg, client);
 }
 
-#undef CHANNE
+void Channel::recvMessage(Client *sender, const std::string &msg) const
+{
+	std::string str(":");
+	str += sender->getUsername() + " PRIVMSG " + Name + " " + msg;
+	broadcast(str, sender);
+}
+
+void Channel::broadcast(const std::string &msg, Client *sender) const
+{
+	std::vector<Client *> vec;
+	vec.push_back(sender);
+	broadcast(msg, vec);
+}
+
+void Channel::broadcast(const std::string &msg, const std::vector<Client *> &exceptions) const
+{
+	for (auto _client = clientMap.begin(); _client != clientMap.end(); _client++)
+	{
+		const Client *client = _client->first;
+		if (exceptions.size())
+		{
+			auto findClient = std::find(exceptions.begin(), exceptions.end(), client);
+			if (findClient != exceptions.end())
+				continue;
+		}
+		SEND("s", msg.c_str());
+	}
+}
+
+#undef CHANNEL
