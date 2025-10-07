@@ -6,13 +6,15 @@
 /*   By: wirare <wirare@42angouleme.fr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 19:22:04 by wirare            #+#    #+#             */
-/*   Updated: 2025/10/06 12:59:13 by wirare           ###   ########.fr       */
+/*   Updated: 2025/10/07 17:37:21 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <StringHelper.hpp>
 #include <Message.hpp>
 #include <Channel.hpp>
 #include <Server.hpp>
+#include <RPL_list.hpp>
+#include <algorithm>
 #define CHANNEL
 #include <Send.hpp>
 
@@ -39,18 +41,39 @@ void Channel::addClient(Client *client, ClientState state, const std::string &ke
 
 void Channel::successfulJoin(Client *client)
 {
-	SEND("csss", client->getUsername().c_str(), " JOIN ", Name.c_str());
-	SEND("sssss", client->getUsername().c_str(), " ", Name.c_str(), ":", Topic.c_str());
+	std::string msg = SEND("csss", client->getUsername().c_str(), " JOIN ", Name.c_str());
+	SEND("odssssss", RPL_TOPIC, " ", client->getUsername().c_str(), " ", Name.c_str(), " :", Topic.c_str());
 	executeCommandInternal(NAMES, StringHelper::makeVector("NAMES ", Name), client);
+	broadcast(msg, client);
 }
 
-void Channel::recvMessage(const Client *sender, const std::string &msg) const
+void Channel::recvMessage(Client *sender, const std::string &msg) const
+{
+	std::string str(":");
+	str += sender->getUsername() + " PRIVMSG " + Name + " " + msg;
+	broadcast(str, sender);
+}
+
+void Channel::broadcast(const std::string &msg, Client *sender) const
+{
+	std::vector<Client *> vec;
+	vec.push_back(sender);
+	broadcast(msg, vec);
+}
+
+void Channel::broadcast(const std::string &msg, const std::vector<Client *> &exceptions) const
 {
 	for (auto _client = clientMap.begin(); _client != clientMap.end(); _client++)
 	{
 		const Client *client = _client->first;
-		if (client != sender)
-			SEND("csssss", sender->getUsername().c_str(), " PRIVMSG ", Name.c_str(), " ", msg.c_str());
+		if (exceptions.size())
+		{
+			auto findClient = std::find(exceptions.begin(), exceptions.end(), client);
+			if (findClient != exceptions.end())
+				continue;
+		}
+		SEND("s", msg.c_str());
 	}
 }
+
 #undef CHANNEL

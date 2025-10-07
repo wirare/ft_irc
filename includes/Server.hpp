@@ -6,10 +6,11 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/04 15:56:58 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/07 17:35:20 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
+#include "RPL_list.hpp"
 #include "auto.hpp"
 #include <cassert>
 #include <cstdarg>
@@ -207,9 +208,10 @@ public:
 		return oss.str();
 	}
 
-	inline void sendMessage(int fd, const std::string &msg)
+	inline std::string sendMessage(int fd, const std::string &msg)
 	{
 		send(fd, msg.c_str(), msg.size(), 0);
+		return msg;
 	}
 
 	inline void sendError(int err, int fd)
@@ -222,10 +224,10 @@ public:
 		Client *client = clientMap.at(fd);
 		const std::string str_nick = client->getNick();
 		const char *nick = str_nick.c_str();
-		SEND("osssssss", "001 ", nick, " :Welcome to the IRC network ", nick, "!", client->getUsername().c_str(), name.c_str());
-		SEND("ossssss", "002 ", nick, " :Your host is ", name.c_str(), ", running version", " 1.0");
-		SEND("ossssn", "003 ", nick, " :This server was created ", ctime(&startTime));
-		SEND("osssssss", "004 ", nick, " ", name.c_str(), " 1.0", " iow", " irsk");
+		SEND("odsssssss", RPL_WELCOME, " ", nick, " :Welcome to the IRC network ", nick, "!", client->getUsername().c_str(), name.c_str());
+		SEND("odssssss", RPL_YOURHOST, " ", nick, " :Your host is ", name.c_str(), ", running version", " 1.0");
+		SEND("odssssn", RPL_CREATED, " ", nick, " :This server was created ", ctime(&startTime));
+		SEND("odsssssss", RPL_MYINFO, " ", nick, " ", name.c_str(), " 1.0", " iow", " irsk");
 	}
 
 	inline std::map<int, Client*>& getClientMap() { return clientMap; }

@@ -6,12 +6,13 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/28 16:44:48 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/04 15:43:29 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/07 17:28:59 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
 #include <ATarget.hpp>
 #include <iostream>
+#include <vector>
 #include <map>
 #include <Client.hpp>
 #include <DeclMacro.hpp>
@@ -64,7 +65,9 @@ class Channel: public ATarget
 			return false;
 		}
 		inline bool operator==(const Channel &other) { return Id == other.Id; } 
-		void recvMessage(const Client *client, const std::string &msg) const;
+		void recvMessage(Client *client, const std::string &msg) const;
+		void broadcast(const std::string &msg, Client *sender) const;
+		void broadcast(const std::string &msg, const std::vector<Client *> &exceptions = std::vector<Client *>()) const;
 
 	private:
 		std::map<Client*, ClientState> clientMap;

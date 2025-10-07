@@ -205,4 +205,3 @@ void executeCommand(const IrcMessage &msg, Client *client)
 {
 	executeCommandInternal(msg.id, msg.params, client);
 }
-
