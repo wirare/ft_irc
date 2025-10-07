@@ -6,7 +6,7 @@
 /*   By: wirare <wirare@42angouleme.fr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 19:22:04 by wirare            #+#    #+#             */
-/*   Updated: 2025/10/07 17:37:21 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/07 20:24:30 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <StringHelper.hpp>
@@ -15,10 +15,11 @@
 #include <Server.hpp>
 #include <RPL_list.hpp>
 #include <algorithm>
+#include <ctime>
 #define CHANNEL
 #include <Send.hpp>
 
-Channel::Channel(const std::string &name): Topic(""), Name(name), channelModes(0)
+Channel::Channel(const std::string &name): Topic(""), Name(name), TopicTime(std::time(NULL)), channelModes(0)
 {
 	Id = server.getChannelNumber();
 }
@@ -35,6 +36,8 @@ void Channel::addClient(Client *client, ClientState state, const std::string &ke
 		if (clientState == clientMap.end() || clientState->second != INVITED)
 			SEND_ERR(473);
 	}
+	if (clientMap.size() == 0)
+		TopicChanger = client->getNick();
 	clientMap[client] = state;
 	successfulJoin(client);
 }

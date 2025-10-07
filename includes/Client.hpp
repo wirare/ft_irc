@@ -1,9 +1,12 @@
 #pragma once
 
+#include <netinet/in.h>
 #include <string>
 #include <ostream>
 #include <DeclMacro.hpp>
 #include <ATarget.hpp>
+#include <unistd.h>
+#include <arpa/inet.h>
 
 typedef enum {
 	NEW,
@@ -21,10 +24,15 @@ class Client: public ATarget
 	DECLARE(State, State);
 	DECLARE(std::string, LastPass);
 	DECLARE(bool, SendPass);
+	DECLARE(std::string, Hostname);
 
 	public:
 		Client() {};
-		Client(int fd): Nick("UNSET"), Username("UNSET"), Realname("UNSET"), State(NEW), LastPass(""), SendPass(false), fd(fd) {};
+		Client(int fd): Nick("UNSET"), Username("UNSET"), Realname("UNSET"), State(NEW), LastPass(""), SendPass(false), fd(fd) 
+		{
+			struct sockaddr_in addr;
+			Hostname = inet_ntoa(addr.sin_addr);
+		};
 		inline int	getFd() const { return fd; };
 		inline bool operator<(const Client &other) const { return fd < other.fd; }
 		inline bool operator==(const Client &other) const { return fd == other.fd; }
