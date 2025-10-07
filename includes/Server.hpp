@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/07 17:35:20 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/07 20:31:17 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -188,6 +188,12 @@ public:
 				{
 					int i = va_arg(args, int);
 					oss << i;
+					break;
+				}
+				case 'l':
+				{
+					long l = va_arg(args, long);
+					oss << l;
 					break;
 				}
 				case 'n':

@@ -6,11 +6,12 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/28 16:44:48 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/07 17:28:59 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/07 20:22:06 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
 #include <ATarget.hpp>
+#include <ctime>
 #include <iostream>
 #include <vector>
 #include <map>
@@ -43,6 +44,8 @@ class Channel: public ATarget
 	DECLARE(std::string, Name);
 	DECLARE(std::string, Key);
 	DECLARE(unsigned int, UserLimit);
+	DECLARE(std::time_t, TopicTime);
+	DECLARE(std::string, TopicChanger);
 
 	public:
 		Channel() {};
@@ -71,7 +74,7 @@ class Channel: public ATarget
 
 	private:
 		std::map<Client*, ClientState> clientMap;
-		int channelModes;    
+		int channelModes;
 		Channel(const Channel&);
 		Channel& operator=(const Channel&);
 };

@@ -9,6 +9,7 @@
 #include <auto.hpp>
 #include <Send.hpp>
 #include <RPL_list.hpp>
+#include <ctime>
 
 #define CALL_LOG(id)\
 	std::cout << "Command "#id" got called\n"
@@ -171,11 +172,52 @@ CMD_DEF(PRIVMSG)
 	}
 }
 
+CMD_DEF(TOPIC)
+{
+	if (body.params.size() == 1)
+		SEND_ERR(461);
+
+	Channel *chan = server.getChannel(body.params[1]);
+	if (!chan)
+		SEND_ERR(403);
+
+	if (!chan->hasClient(body.client))
+		SEND_ERR(442);
+
+	if (body.params.size() == 2)
+	{
+		std::string topic = chan->getTopic();
+		time_t _time = chan->getTopicTime();
+		if (topic == "")
+			SEND("odsssss", RPL_NOTOPIC, " ", body.client->getUsername().c_str(), " ", chan->getName().c_str(), " :No topic is set");
+		else
+		{
+			SEND("odssssss", RPL_TOPIC, " ", body.client->getUsername().c_str(), " ", chan->getName().c_str(), " :", topic.c_str());
+			SEND("odsssssssl", RPL_TOPICWHOTIME, " ", body.client->getUsername().c_str(), " ", chan->getName().c_str(), " ", chan->getTopicChanger().c_str(), " ", _time);
+		}
+	}
+
+	if (body.params.size() == 3)
+	{
+		if (chan->hasMode(TOPIC_RESTRICTION) && chan->getClientMap().at(body.client) != OP)
+			SEND_ERR(482);
+		std::string topic = body.params[2];
+		topic.erase(0,1);
+		chan->setTopic(topic);
+		chan->setTopicTime(std::time(NULL));
+		chan->setTopicChanger(body.client->getNick());
+		std::string msg(":");
+		msg += body.client->getNick() + "!";
+		msg += body.client->getUsername() + "@";
+		msg += body.client->getHostname() + " TOPIC :" + topic;
+		chan->broadcast(msg);
+	}
+}
+
 buildCmd(PART);
 buildCmd(QUIT);
 buildCmd(KICK);
 buildCmd(INVITE);
-buildCmd(TOPIC);
 buildCmd(MODE);
 buildCmd(UNKNOWN);
 

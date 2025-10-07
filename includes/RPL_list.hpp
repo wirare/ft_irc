@@ -6,7 +6,7 @@
 /*   By: wirare <wirare@42angouleme.fr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/06 13:04:40 by wirare            #+#    #+#             */
-/*   Updated: 2025/10/07 16:02:33 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/07 17:57:15 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -17,4 +17,6 @@
 #define RPL_MYINFO 004
 #define RPL_NAMEREPLY 353
 #define RPL_ENDOFNAMES 366
+#define RPL_NOTOPIC 331
 #define RPL_TOPIC 332
+#define RPL_TOPICWHOTIME 333
