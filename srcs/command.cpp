@@ -219,8 +219,43 @@ CMD_DEF(TOPIC)
 	}
 }
 
-buildCmd(PART);
-buildCmd(QUIT);
+CMD_DEF(PART)
+{
+	if (body.params.size() == 1)
+		SEND_ERR(ERR_NEEDMOREPARAMS, body.params[0]);
+
+	std::vector<std::string> channels = StringHelper::split(body.params[1], ',');
+	std::string reason(" :");
+	if (body.params.size() >= 3)
+		reason += body.params[2];
+	for (size_t i = 0; i != channels.size(); i++)
+	{
+		Channel *chan = server.getChannel(channels[i]);
+		if (!chan)
+			SEND_ERR_CONTINUE(ERR_NOSUCHCHANNEL, channels[i]);
+		if (!chan->hasClient(body.client))
+			SEND_ERR_CONTINUE(ERR_NOTONCHANNEL, _NICK, channels[i]);
+
+		chan->broadcast(server.buildMessage("cssssssss", _NICK.c_str(), "!", body.client->getUsername().c_str(), "@", body.client->getHostname().c_str(), " PART ", channels[i].c_str(), reason.c_str()));
+		chan->delClient(body.client);
+	}
+}
+
+CMD_DEF(QUIT)
+{
+	std::vector<Channel*> channels = server.getClientChannel(body.client);
+	std::string reason(" :");
+	if (body.params.size() >= 2)
+		reason += body.params[1];
+	for (size_t i = 0; i != channels.size(); i++)
+	{
+		channels[i]->broadcast(server.buildMessage("cssssssss", _NICK.c_str(), "!", body.client->getUsername().c_str(), "@", body.client->getHostname().c_str(), " QUIT ", channels[i]->getName().c_str(), reason.c_str()));
+		channels[i]->delClient(body.client);
+	}
+	SEND("ssssssss", "ERROR :Closing Link: ", _NICK.c_str(), "[", body.client->getHostname().c_str(), "] (Quit: ", body.params[1].c_str(), ")");
+	server.deleteClient(body.client);
+}
+
 buildCmd(KICK);
 buildCmd(INVITE);
 buildCmd(MODE);

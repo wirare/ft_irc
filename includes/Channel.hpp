@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/28 16:44:48 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/07 20:22:06 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/09 23:04:19 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -57,6 +57,7 @@ class Channel: public ATarget
 		inline void toggleMode(ChannelModeFlag mode) { channelModes ^= mode; }
 		inline const std::map<Client*, ClientState> getClientMap() const { return clientMap; }
 		void addClient(Client *client, ClientState state, const std::string &key = "");
+		void delClient(Client *client);
 		void successfulJoin(Client *client);
 		inline bool hasClient(const Client *client) const
 		{

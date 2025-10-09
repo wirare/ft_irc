@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/09 19:40:58 by wirare           ###   ########.fr       */
+/*   Updated: 2025/10/09 23:59:06 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -109,7 +109,6 @@ public:
 		int count = recv(client->getFd(), buf, sizeof(buf) - 1, 0);
 		if (count <= 0) 
 		{
-			close(client->getFd());
 			clientMap.erase(client->getFd());
 			delete client;
 			return ;
@@ -258,6 +257,12 @@ public:
 	{
 		channelMap.erase(chan->getName());
 		delete chan;
+	}
+
+	inline void deleteClient(Client *client)
+	{
+		clientMap.erase(client->getFd());
+		delete client;
 	}
 
 	inline std::vector<Channel *> getClientChannel(const Client *client)

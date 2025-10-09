@@ -33,6 +33,7 @@ class Client: public ATarget
 			struct sockaddr_in addr;
 			Hostname = inet_ntoa(addr.sin_addr);
 		};
+		~Client() { close(fd); }
 		inline int	getFd() const { return fd; };
 		inline bool operator<(const Client &other) const { return fd < other.fd; }
 		inline bool operator==(const Client &other) const { return fd == other.fd; }
