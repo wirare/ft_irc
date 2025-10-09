@@ -6,7 +6,7 @@
 /*   By: wirare <wirare@42angouleme.fr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 19:22:04 by wirare            #+#    #+#             */
-/*   Updated: 2025/10/09 19:42:41 by wirare           ###   ########.fr       */
+/*   Updated: 2025/10/10 00:00:05 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <ErrorCode.hpp>
@@ -41,6 +41,13 @@ void Channel::addClient(Client *client, ClientState state, const std::string &ke
 		TopicChanger = client->getNick();
 	clientMap[client] = state;
 	successfulJoin(client);
+}
+
+void Channel::delClient(Client *client)
+{
+	clientMap.erase(client);
+	if (clientMap.size() == 0)
+		server.deleteChannel(this);
 }
 
 void Channel::successfulJoin(Client *client)
