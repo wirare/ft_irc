@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/07 20:31:17 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/09 19:40:58 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -30,6 +30,7 @@
 #include <Client.hpp>
 #include <Message.hpp>
 #include <ctime>
+#include <ErrorCode.hpp>
 #include <Channel.hpp>
 
 #define MAX_CLIENT 128
@@ -220,9 +221,9 @@ public:
 		return msg;
 	}
 
-	inline void sendError(int err, int fd)
+	inline void sendError(int err, int fd, const std::string& err_param)
 	{
-		SEND("odss", err, " * : ", getErrMsg(err).c_str());
+		SEND("odssss", err, " ", err_param.c_str(), " :", getErrMsg(err).c_str());
 	}
 
 	inline void sendSuccessfulRegister(int fd)
