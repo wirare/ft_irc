@@ -28,7 +28,7 @@ class Client: public ATarget
 
 	public:
 		Client() {};
-		Client(int fd): Nick("UNSET"), Username("UNSET"), Realname("UNSET"), State(NEW), LastPass(""), SendPass(false), fd(fd) 
+		Client(int fd): Nick(""), Username(""), Realname(""), State(NEW), LastPass(""), SendPass(false), fd(fd) 
 		{
 			struct sockaddr_in addr;
 			Hostname = inet_ntoa(addr.sin_addr);

@@ -6,9 +6,10 @@
 /*   By: wirare <wirare@42angouleme.fr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 19:22:04 by wirare            #+#    #+#             */
-/*   Updated: 2025/10/07 20:24:30 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/09 19:42:41 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+#include <ErrorCode.hpp>
 #include <StringHelper.hpp>
 #include <Message.hpp>
 #include <Channel.hpp>
@@ -27,14 +28,14 @@ Channel::Channel(const std::string &name): Topic(""), Name(name), TopicTime(std:
 void Channel::addClient(Client *client, ClientState state, const std::string &key)
 {
 	if (hasMode(USER_LIMIT) && clientMap.size() >= UserLimit)
-		SEND_ERR(471);
+		SEND_ERR(ERR_CHANNELISFULL, _NICK, Name);
 	if (hasMode(CHANNEL_KEY) && key != Key)
-		SEND_ERR(475);
+		SEND_ERR(ERR_BADCHANNELKEY, _NICK, Name);
 	if (hasMode(INVITE_ONLY))
 	{
 		auto clientState = clientMap.find(client);
 		if (clientState == clientMap.end() || clientState->second != INVITED)
-			SEND_ERR(473);
+			SEND_ERR(ERR_INVITEONLYCHAN, _NICK, Name);
 	}
 	if (clientMap.size() == 0)
 		TopicChanger = client->getNick();

@@ -6,37 +6,55 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/23 20:50:36 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/04 15:21:56 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/09 19:42:04 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-#ifndef USEFULL_MACRO
-	#define USEFULL_MACRO
-	#define	_CONCAT(a, b)			a ## b
-	#define	CONCAT(a, b)			_CONCAT(a, b)
-	#define RETURN_2				continue;
-	#define	RETURN_1	
-	#define	RETURN_0				return;
-	#define	_COUNT(_a, _b, _N, ...)	_N
-	#define	COUNT(...)				_COUNT(__VA_ARGS__ __VA_OPT__(,) 2, 1, 0)
-	#define	RETURN(...)				CONCAT(RETURN_, COUNT(__VA_ARGS__))
-	#define	NORETURN				0
-	#define CONTINUE				0,0
+#include <UsefullMacro.hpp>
+#ifndef BUILDER_MACRO
+	#define BUILDER_MACRO
+	#define BUILD_ERR_1(param)			param_str += param;
+	#define BUILD_ERR_2(param1, param2) param_str += param1 + " " + param2;
+	#define BUILD_ERR(...)				CONCAT(BUILD_ERR_, COUNT(__VA_ARGS__))
 #endif
 
 #ifdef SEND
-#	undef SEND
-#	undef SEND_ERR
+	#undef SEND
+	#undef SEND_ERR
+	#undef SERVER_OPT
+	#undef FD_NAME
 #endif
 
 #if defined(SERVER)
-	#define SEND(...) sendMessage(fd, buildMessage(__VA_ARGS__))
-	#define SEND_ERR(err) {sendError(err, fd); return;}
+	#define SERVER_OPT
+	#define FD_NAME fd
 #elif defined(CHANNEL)
-	#define SEND(...) server.sendMessage(client->getFd(), server.buildMessage(__VA_ARGS__))
-	#define SEND_ERR(err) {server.sendError(err, client->getFd()); return;}
+	#define _NICK client->getNick()
+	#define SERVER_OPT server.
+	#define FD_NAME client->getFd()
 #elif defined(CLIENT)
-	#define SEND(...) server.sendMessage(fd, server.buildMessage(__VA_ARGS__))
+	#define SERVER_OPT server.
+	#define FD_NAME fd
 #else
-	#define SEND(...) server.sendMessage(body.client->getFd(), server.buildMessage(__VA_ARGS__))
-	#define SEND_ERR(err, ...) {server.sendError(err, body.client->getFd()); RETURN(__VA_OPT__(__VA_ARGS__))}
+	#define _NICK body.client->getNick()
+	#define SERVER_OPT server.
+	#define FD_NAME body.client->getFd()
 #endif
+
+#define SEND(...) SERVER_OPT sendMessage(FD_NAME, SERVER_OPT buildMessage(__VA_ARGS__))
+
+#define SEND_ERR(err, ...)								\
+	{													\
+		std::string param_str;							\
+		BUILD_ERR(__VA_OPT__(__VA_ARGS__))(__VA_ARGS__)	\
+		SERVER_OPT sendError(err, FD_NAME, param_str);	\
+		return;											\
+	}
+
+#define SEND_ERR_CONTINUE(err, ...)						\
+	{													\
+		std::string param_str;							\
+		BUILD_ERR(__VA_OPT__(__VA_ARGS__))(__VA_ARGS__)	\
+		SERVER_OPT sendError(err, FD_NAME, param_str);	\
+		continue;										\
+	}
+

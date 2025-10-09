@@ -1,4 +1,4 @@
-#include "ATarget.hpp"
+#include <ATarget.hpp>
 #include <Channel.hpp>
 #include <Message.hpp>
 #include <Client.hpp>
@@ -10,6 +10,7 @@
 #include <Send.hpp>
 #include <RPL_list.hpp>
 #include <ctime>
+#include <ErrorCode.hpp>
 
 #define CALL_LOG(id)\
 	std::cout << "Command "#id" got called\n"
@@ -26,16 +27,20 @@
 CMD_DEF(NICK)
 {
 	if (body.client->getLastPass() != server.getPassword())
-		SEND_ERR(464);
+		SEND_ERR(ERR_PASSWDMISMATCH, _NICK);
 	body.client->setState(POST_PASS);
 	if (body.params.size() <= 1)
-		SEND_ERR(431);
+		SEND_ERR(ERR_NONICKNAMEGIVEN, _NICK);
 	std::string nick = body.params[1];
 	std::map<int, Client*> clients = server.getClientMap();
 	for (auto it = clients.begin(); it != clients.end(); ++it)
 	{
 		if (it->second->getNick() == nick)
-			SEND_ERR(433);
+		{
+			if (body.client->getNick() == "")
+				SEND_ERR(ERR_NICKNAMEINUSE, std::string("*"), nick);
+			SEND_ERR(ERR_NICKNAMEINUSE, _NICK, nick);
+		}
 	}
 	body.client->setNick(nick);
 }
@@ -43,25 +48,25 @@ CMD_DEF(NICK)
 CMD_DEF(PASS)
 {
 	if (body.client->getState() != NEW)
-		SEND_ERR(462);
+		SEND_ERR(ERR_ALREADYREGISTERED, _NICK);
 	if (body.params.size() <= 1)
-		SEND_ERR(461);
+		SEND_ERR(ERR_NEEDMOREPARAMS, body.params[0]);
 	body.client->setLastPass(body.params[1]);
 }
 
 CMD_DEF(PING)
 {
 	if (body.params.size() <= 1)
-		SEND_ERR(461);
+		SEND_ERR(ERR_NEEDMOREPARAMS, body.params[0]);
 	SEND("ss", "PONG", body.params[1].c_str());
 }
 
 CMD_DEF(USER)
 {
 	if (body.params.size() <= 4)
-		SEND_ERR(461);
+		SEND_ERR(ERR_NEEDMOREPARAMS, body.params[0]);
 	if (body.client->getState() != POST_PASS)
-		SEND_ERR(462);
+		SEND_ERR(ERR_ALREADYREGISTERED, _NICK);
 	
 	body.client->setUsername(body.params[1]);
 
@@ -83,7 +88,7 @@ CMD_DEF(USER)
 CMD_DEF(JOIN)
 {
 	if (body.params.size() == 1)
-		SEND_ERR(461);
+		SEND_ERR(ERR_NEEDMOREPARAMS, body.params[0]);
 	if (body.client->getState() != AUTH)
 		return ;
 
@@ -95,7 +100,7 @@ CMD_DEF(JOIN)
 	for (size_t i = 0; i != channels.size(); i++)
 	{
 		if (!StringHelper::checkChannelFormat(channels[i]))
-			SEND_ERR(476, CONTINUE);
+			SEND_ERR_CONTINUE(ERR_BADCHANMASK, _NICK, channels[i]);
 		Channel *chan = server.getChannel(channels[i]);
 		if (chan)
 		{
@@ -115,7 +120,7 @@ CMD_DEF(JOIN)
 CMD_DEF(NAMES)
 {
 	if (body.params.size() == 1)
-		SEND_ERR(461);
+		SEND_ERR(ERR_NEEDMOREPARAMS, body.params[0]);
 	if (body.client->getState() != AUTH)
 		return ;
 
@@ -175,14 +180,14 @@ CMD_DEF(PRIVMSG)
 CMD_DEF(TOPIC)
 {
 	if (body.params.size() == 1)
-		SEND_ERR(461);
+		SEND_ERR(ERR_NEEDMOREPARAMS, body.params[0]);
 
 	Channel *chan = server.getChannel(body.params[1]);
 	if (!chan)
-		SEND_ERR(403);
+		SEND_ERR(ERR_NOSUCHCHANNEL, body.params[1]);
 
 	if (!chan->hasClient(body.client))
-		SEND_ERR(442);
+		SEND_ERR(ERR_NOTONCHANNEL, _NICK, body.params[1]);
 
 	if (body.params.size() == 2)
 	{
@@ -200,7 +205,7 @@ CMD_DEF(TOPIC)
 	if (body.params.size() == 3)
 	{
 		if (chan->hasMode(TOPIC_RESTRICTION) && chan->getClientMap().at(body.client) != OP)
-			SEND_ERR(482);
+			SEND_ERR(ERR_CHANOPRIVSNEEDED, _NICK, body.params[1]);
 		std::string topic = body.params[2];
 		topic.erase(0,1);
 		chan->setTopic(topic);
