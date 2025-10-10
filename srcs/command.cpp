@@ -57,14 +57,14 @@ CMD_DEF(PASS)
 CMD_DEF(PING)
 {
 	if (body.params.size() <= 1)
-		SEND_ERR(ERR_NEEDMOREPARAMS, body.params[0]);
+		SEND_ERR(ERR_NEEDMOREPARAMS, _NICK, body.params[0]);
 	SEND("ss", "PONG", body.params[1].c_str());
 }
 
 CMD_DEF(USER)
 {
 	if (body.params.size() <= 4)
-		SEND_ERR(ERR_NEEDMOREPARAMS, body.params[0]);
+		SEND_ERR(ERR_NEEDMOREPARAMS, _NICK, body.params[0]);
 	if (body.client->getState() != POST_PASS)
 		SEND_ERR(ERR_ALREADYREGISTERED, _NICK);
 	
@@ -88,7 +88,7 @@ CMD_DEF(USER)
 CMD_DEF(JOIN)
 {
 	if (body.params.size() == 1)
-		SEND_ERR(ERR_NEEDMOREPARAMS, body.params[0]);
+		SEND_ERR(ERR_NEEDMOREPARAMS, _NICK, body.params[0]);
 	if (body.client->getState() != AUTH)
 		return ;
 
@@ -120,7 +120,7 @@ CMD_DEF(JOIN)
 CMD_DEF(NAMES)
 {
 	if (body.params.size() == 1)
-		SEND_ERR(ERR_NEEDMOREPARAMS, body.params[0]);
+		SEND_ERR(ERR_NEEDMOREPARAMS, _NICK, body.params[0]);
 	if (body.client->getState() != AUTH)
 		return ;
 
@@ -180,7 +180,7 @@ CMD_DEF(PRIVMSG)
 CMD_DEF(TOPIC)
 {
 	if (body.params.size() == 1)
-		SEND_ERR(ERR_NEEDMOREPARAMS, body.params[0]);
+		SEND_ERR(ERR_NEEDMOREPARAMS, _NICK, body.params[0]);
 
 	Channel *chan = server.getChannel(body.params[1]);
 	if (!chan)
@@ -222,7 +222,7 @@ CMD_DEF(TOPIC)
 CMD_DEF(PART)
 {
 	if (body.params.size() == 1)
-		SEND_ERR(ERR_NEEDMOREPARAMS, body.params[0]);
+		SEND_ERR(ERR_NEEDMOREPARAMS, _NICK, body.params[0]);
 
 	std::vector<std::string> channels = StringHelper::split(body.params[1], ',');
 	std::string reason(" :");
@@ -256,7 +256,38 @@ CMD_DEF(QUIT)
 	server.deleteClient(body.client);
 }
 
-buildCmd(KICK);
+CMD_DEF(KICK)
+{
+	if (body.params.size() <= 2)
+		SEND_ERR(ERR_NEEDMOREPARAMS, _NICK, body.params[0]);
+
+	std::vector<std::string> channels = StringHelper::split(body.params[1], ',');
+	std::vector<std::string> clients = StringHelper::split(body.params[2], ',');
+	std::string reason(" :Kicked");
+	if (body.params.size() >= 4)
+		reason = " :" + body.params[3];
+
+	for (size_t i = channels.size(); i != channels.size(); i++)
+	{
+		Channel *chan = server.getChannel(channels[i]);
+		if (!chan)
+			SEND_ERR_CONTINUE(ERR_NOSUCHCHANNEL, _NICK, channels[i]);
+		if (!chan->hasClient(body.client))
+			SEND_ERR_CONTINUE(ERR_NOTONCHANNEL, _NICK, channels[i]);
+		if (!chan->isOp(body.client))
+			SEND_ERR_CONTINUE(ERR_CHANOPRIVSNEEDED, _NICK, channels[i]);
+		for (size_t j = clients.size(); j != clients.size(); j++)
+		{
+			Client *kicked = server.getClient(clients[i]);
+			if (!kicked)
+				SEND_ERR_CONTINUE(ERR_NOSUCHNICK, _NICK, clients[i]);
+			if (!chan->hasClient(kicked))
+				SEND_ERR_CONTINUE(ERR_USERNOTINCHANNEL, _NICK, clients[i], channels[i]);
+			chan->broadcast(server.buildMessage("cssssssssss", _NICK.c_str(), "!", body.client->getUsername().c_str(), "@", body.client->getHostname().c_str(), " KICK ", channels[i].c_str(), " ", kicked->getNick().c_str(), reason.c_str()));
+		}
+	}
+}
+
 buildCmd(INVITE);
 buildCmd(MODE);
 buildCmd(UNKNOWN);

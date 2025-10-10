@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/28 16:44:48 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/09 23:04:19 by wirare           ###   ########.fr       */
+/*   Updated: 2025/10/10 13:02:32 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -72,6 +72,7 @@ class Channel: public ATarget
 		void recvMessage(Client *client, const std::string &msg) const;
 		void broadcast(const std::string &msg, Client *sender) const;
 		void broadcast(const std::string &msg, const std::vector<Client *> &exceptions = std::vector<Client *>()) const;
+		bool isOp(Client *client) { return clientMap.find(client)->second == OP; }
 
 	private:
 		std::map<Client*, ClientState> clientMap;

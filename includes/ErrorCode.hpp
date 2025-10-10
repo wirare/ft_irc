@@ -6,7 +6,7 @@
 /*   By: wirare <wirare@42angouleme.fr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/09 18:17:41 by wirare            #+#    #+#             */
-/*   Updated: 2025/10/09 19:43:17 by wirare           ###   ########.fr       */
+/*   Updated: 2025/10/10 13:10:13 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -19,6 +19,7 @@
 #define ERR403 "No such channel"
 #define ERR433 "Nickname is already in use"
 #define ERR431 "No nickname given"
+#define ERR441 "They aren't on that channel"
 #define ERR442 "You're not on that channel"
 #define ERR461 "Not enough parameters"
 #define ERR462 "You may not reregister"
@@ -33,6 +34,7 @@
 #define ERR_NOSUCHCHANNEL 403
 #define ERR_NICKNAMEINUSE 433
 #define ERR_NONICKNAMEGIVEN 431
+#define ERR_USERNOTINCHANNEL 441
 #define ERR_NOTONCHANNEL 442
 #define ERR_NEEDMOREPARAMS 461
 #define ERR_ALREADYREGISTERED 462
@@ -51,6 +53,7 @@ inline std::string getErrMsg(int err)
 		ERR(403);
 		ERR(433);
 		ERR(431);
+		ERR(441);
 		ERR(442);
 		ERR(461);
 		ERR(462);

@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/09 23:59:06 by wirare           ###   ########.fr       */
+/*   Updated: 2025/10/10 13:00:40 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -276,6 +276,15 @@ public:
 		return channels;
 	}
 	inline int getChannelNumber() const { return channelMap.size(); }
+	inline Client *getClient(const std::string &nick)
+	{
+		for (auto it = clientMap.begin(); it != clientMap.end(); it++)
+		{
+			if (it->second->getNick() == nick)
+				return it->second;
+		}
+		return NULL;
+	}
 
 private:
 	std::string name;

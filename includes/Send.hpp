@@ -6,15 +6,16 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/23 20:50:36 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/09 19:42:04 by wirare           ###   ########.fr       */
+/*   Updated: 2025/10/10 13:15:03 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <UsefullMacro.hpp>
 #ifndef BUILDER_MACRO
 	#define BUILDER_MACRO
-	#define BUILD_ERR_1(param)			param_str += param;
-	#define BUILD_ERR_2(param1, param2) param_str += param1 + " " + param2;
-	#define BUILD_ERR(...)				CONCAT(BUILD_ERR_, COUNT(__VA_ARGS__))
+	#define BUILD_ERR_1(param)					param_str += param;
+	#define BUILD_ERR_2(param1, param2)			param_str += param1 + " " + param2;
+	#define BUILD_ERR_3(param1, param2, param3) param_str += param1 + " " + param2 + " " + param3;
+	#define BUILD_ERR(...)						CONCAT(BUILD_ERR_, COUNT(__VA_ARGS__))
 #endif
 
 #ifdef SEND
