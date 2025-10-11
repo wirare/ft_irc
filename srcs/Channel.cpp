@@ -6,7 +6,7 @@
 /*   By: wirare <wirare@42angouleme.fr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 19:22:04 by wirare            #+#    #+#             */
-/*   Updated: 2025/10/10 00:00:05 by wirare           ###   ########.fr       */
+/*   Updated: 2025/10/11 17:06:24 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <ErrorCode.hpp>
@@ -83,8 +83,15 @@ void Channel::broadcast(const std::string &msg, const std::vector<Client *> &exc
 			if (findClient != exceptions.end())
 				continue;
 		}
+		if (_client->second == INVITED)
+			continue;
 		SEND("s", msg.c_str());
 	}
+}
+
+void Channel::invite(Client *client)
+{
+	clientMap[client] = INVITED;
 }
 
 #undef CHANNEL

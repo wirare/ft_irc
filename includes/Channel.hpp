@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/28 16:44:48 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/10 13:02:32 by wirare           ###   ########.fr       */
+/*   Updated: 2025/10/11 17:06:52 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -63,7 +63,7 @@ class Channel: public ATarget
 		{
 			for (auto it = clientMap.begin(); it != clientMap.end(); it++)
 			{
-				if (it->first == client)
+				if (it->first == client && it->second != INVITED)
 					return true;
 			}
 			return false;
@@ -73,6 +73,7 @@ class Channel: public ATarget
 		void broadcast(const std::string &msg, Client *sender) const;
 		void broadcast(const std::string &msg, const std::vector<Client *> &exceptions = std::vector<Client *>()) const;
 		bool isOp(Client *client) { return clientMap.find(client)->second == OP; }
+		void invite(Client *client);
 
 	private:
 		std::map<Client*, ClientState> clientMap;
