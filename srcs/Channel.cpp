@@ -6,7 +6,7 @@
 /*   By: wirare <wirare@42angouleme.fr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 19:22:04 by wirare            #+#    #+#             */
-/*   Updated: 2025/10/13 11:55:31 by wirare           ###   ########.fr       */
+/*   Updated: 2025/10/13 18:03:37 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <ErrorCode.hpp>
@@ -21,7 +21,7 @@
 #include <Send.hpp>
 
 
-Channel::Channel(const std::string &name): Topic(""), Name(name), TopicTime(std::time(NULL)), channelModes(0)
+Channel::Channel(const std::string &name): Topic(""), Name(name), CreationTime(std::time(NULL)), TopicTime(std::time(NULL)), channelModes(0)
 {
 	Id = server.getChannelNumber();
 }
@@ -90,9 +90,18 @@ void Channel::broadcast(const std::string &msg, const std::vector<Client *> &exc
 	}
 }
 
-void Channel::invite(Client *client)
+void Channel::revokeInvite()
 {
-	clientMap[client] = INVITED;
+	for (auto it = clientMap.begin(); it != clientMap.end(); it++)
+	{
+		if (it->second == INVITED)
+			clientMap.erase(it->first);
+	}
+}
+
+void Channel::clientSetState(Client *client, ClientState state)
+{
+	clientMap[client] = state;
 }
 
 #undef CHANNEL

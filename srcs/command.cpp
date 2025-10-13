@@ -11,6 +11,7 @@
 #include <RPL_list.hpp>
 #include <ctime>
 #include <ErrorCode.hpp>
+#include <stack>
 
 #define CALL_LOG(id)\
 	std::cout << "Command "#id" got called\n"
@@ -302,11 +303,83 @@ CMD_DEF(INVITE)
 		SEND_ERR(ERR_USERONCHANNEL, _NICK, body.params[1], body.params[2]);
 	if (chan->hasMode(INVITE_ONLY) && !chan->isOp(body.client))
 		SEND_ERR(ERR_CHANOPRIVSNEEDED, _NICK, body.params[2]);
-	chan->invite(invitee);
+	chan->clientSetState(invitee, INVITED);
 	SEND("odsssss", RPL_INVITING, _NICK.c_str(), " ", body.params[1].c_str(), " ", body.params[2].c_str());
-}	
+}
 
-buildCmd(MODE);
+#define IS_PM(x) (x == '+' || x == '-')
+#define SIGN(x) x ? '+' : '-'
+CMD_DEF(MODE)
+{
+	if (body.params.size() == 1)
+		SEND_ERR(ERR_NEEDMOREPARAMS, _NICK, body.params[0]);
+
+	Channel *chan = server.getChannel(body.params[1]);
+	if (!chan)
+		SEND_ERR(ERR_NOSUCHCHANNEL, _NICK, body.params[1]);
+	if (!chan->hasClient(body.client))
+		SEND_ERR(ERR_NOTONCHANNEL, _NICK, body.params[1]);
+
+	std::stack<std::string> modeStack;
+	if (body.params.size() >= 4)
+		for (auto it = body.params.begin() + 4; it != body.params.end(); it++)
+			modeStack.push(it->data());
+
+	bool currentMode;
+	const std::string &modes = body.params[2];
+	if (!IS_PM(modes[0]))
+		SEND_ERR(ERR_NEEDMOREPARAMS, _NICK, body.params[0]);
+	for (size_t i = 0; i != modes.size(); i++)
+	{
+		switch (modes[i])
+		{
+			case '+': currentMode = true; break;
+			case '-': currentMode = false; break;
+			case 'i': 
+			{
+				if (!chan->isOp(body.client))
+					SEND_ERR_CONTINUE(ERR_CHANOPRIVSNEEDED, _NICK, body.params[1]);
+				chan->setMode(INVITE_ONLY, currentMode);
+				chan->revokeInvite();
+				break;
+			}
+			case 'k':
+			{
+				if (!chan->isOp(body.client))
+					SEND_ERR_CONTINUE(ERR_CHANOPRIVSNEEDED, _NICK, body.params[1]);
+				if (currentMode == true)
+				{
+					if (modeStack.size() == 0)
+						SEND_ERR_CONTINUE(ERR_NEEDMOREPARAMS, _NICK, body.params[0]);
+					chan->setKey(modeStack.top());
+					modeStack.pop();
+				}
+				chan->setMode(CHANNEL_KEY, currentMode);
+				break;
+			}
+			case 'o':
+			{
+				if (!chan->isOp(body.client))
+					SEND_ERR_CONTINUE(ERR_CHANOPRIVSNEEDED, _NICK, body.params[1]);
+				if (modeStack.size() == 0)
+					SEND_ERR_CONTINUE(ERR_NEEDMOREPARAMS, _NICK, body.params[0]);
+				const std::string& nick = modeStack.top();
+				Client *target = server.getClient(nick);
+				modeStack.pop();
+				if (!target)
+					SEND_ERR_CONTINUE(ERR_NOSUCHNICK, _NICK, nick);
+				if (!chan->hasClient(target))
+					SEND_ERR_CONTINUE(ERR_USERNOTINCHANNEL, _NICK, nick, body.params[1]);
+				if (currentMode == true)
+					chan->clientSetState(target, OP);
+				else
+					chan->clientSetState(target, NORMAL);
+				break;
+			}
+		}
+	}
+}
+
 buildCmd(UNKNOWN);
 
 void executeCommandInternal(CommandId id, std::vector<std::string> msg, Client *client)
