@@ -6,7 +6,7 @@
 /*   By: wirare <wirare@42angouleme.fr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 19:22:04 by wirare            #+#    #+#             */
-/*   Updated: 2025/10/11 17:06:24 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/13 11:55:31 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <ErrorCode.hpp>
@@ -19,6 +19,7 @@
 #include <ctime>
 #define CHANNEL
 #include <Send.hpp>
+
 
 Channel::Channel(const std::string &name): Topic(""), Name(name), TopicTime(std::time(NULL)), channelModes(0)
 {
