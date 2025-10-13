@@ -32,7 +32,7 @@ CMD_DEF(NICK)
 	if (body.params.size() <= 1)
 		SEND_ERR(ERR_NONICKNAMEGIVEN, _NICK);
 	std::string nick = body.params[1];
-	std::map<int, Client*> clients = server.getClientMap();
+	std::map<int, Client*> &clients = server.getClientMap();
 	for (auto it = clients.begin(); it != clients.end(); ++it)
 	{
 		if (it->second->getNick() == nick)
@@ -211,10 +211,8 @@ CMD_DEF(TOPIC)
 		chan->setTopic(topic);
 		chan->setTopicTime(std::time(NULL));
 		chan->setTopicChanger(body.client->getNick());
-		std::string msg(":");
-		msg += body.client->getNick() + "!";
-		msg += body.client->getUsername() + "@";
-		msg += body.client->getHostname() + " TOPIC :" + topic;
+		std::string msg = body.client->getFullName();
+		msg += " TOPIC :" + topic;
 		chan->broadcast(msg);
 	}
 }
@@ -235,8 +233,7 @@ CMD_DEF(PART)
 			SEND_ERR_CONTINUE(ERR_NOSUCHCHANNEL, channels[i]);
 		if (!chan->hasClient(body.client))
 			SEND_ERR_CONTINUE(ERR_NOTONCHANNEL, _NICK, channels[i]);
-
-		chan->broadcast(server.buildMessage("cssssssss", _NICK.c_str(), "!", body.client->getUsername().c_str(), "@", body.client->getHostname().c_str(), " PART ", channels[i].c_str(), reason.c_str()));
+		chan->broadcast(server.buildMessage("cssss", body.client->getFullName().c_str(), " PART ", channels[i].c_str(), reason.c_str()));
 		chan->delClient(body.client);
 	}
 }
@@ -249,7 +246,7 @@ CMD_DEF(QUIT)
 		reason += body.params[1];
 	for (size_t i = 0; i != channels.size(); i++)
 	{
-		channels[i]->broadcast(server.buildMessage("cssssssss", _NICK.c_str(), "!", body.client->getUsername().c_str(), "@", body.client->getHostname().c_str(), " QUIT ", channels[i]->getName().c_str(), reason.c_str()));
+		channels[i]->broadcast(server.buildMessage("cssss", body.client->getFullName().c_str(), " QUIT ", channels[i]->getName().c_str(), reason.c_str()));
 		channels[i]->delClient(body.client);
 	}
 	SEND("ssssssss", "ERROR :Closing Link: ", _NICK.c_str(), "[", body.client->getHostname().c_str(), "] (Quit: ", body.params[1].c_str(), ")");
@@ -283,12 +280,32 @@ CMD_DEF(KICK)
 				SEND_ERR_CONTINUE(ERR_NOSUCHNICK, _NICK, clients[i]);
 			if (!chan->hasClient(kicked))
 				SEND_ERR_CONTINUE(ERR_USERNOTINCHANNEL, _NICK, clients[i], channels[i]);
-			chan->broadcast(server.buildMessage("cssssssssss", _NICK.c_str(), "!", body.client->getUsername().c_str(), "@", body.client->getHostname().c_str(), " KICK ", channels[i].c_str(), " ", kicked->getNick().c_str(), reason.c_str()));
+			chan->broadcast(server.buildMessage("cssssss", body.client->getFullName().c_str(), " KICK ", channels[i].c_str(), " ", kicked->getNick().c_str(), reason.c_str()));
 		}
 	}
 }
 
-buildCmd(INVITE);
+CMD_DEF(INVITE)
+{
+	if (body.params.size() <= 2)
+		SEND_ERR(ERR_NEEDMOREPARAMS, _NICK, body.params[0]);
+
+	Client *invitee = server.getClient(body.params[1]);
+	Channel *chan = server.getChannel(body.params[2]);
+	if (!invitee)
+		SEND_ERR(ERR_NOSUCHNICK, _NICK, body.params[1]);
+	if (!chan)
+		SEND_ERR(ERR_NOSUCHCHANNEL, _NICK, body.params[2]);
+	if (!chan->hasClient(body.client))
+		SEND_ERR(ERR_NOTONCHANNEL, _NICK, body.params[2]);
+	if (chan->hasClient(invitee))
+		SEND_ERR(ERR_USERONCHANNEL, _NICK, body.params[1], body.params[2]);
+	if (chan->hasMode(INVITE_ONLY) && !chan->isOp(body.client))
+		SEND_ERR(ERR_CHANOPRIVSNEEDED, _NICK, body.params[2]);
+	chan->invite(invitee);
+	SEND("odsssss", RPL_INVITING, _NICK.c_str(), " ", body.params[1].c_str(), " ", body.params[2].c_str());
+}	
+
 buildCmd(MODE);
 buildCmd(UNKNOWN);
 
