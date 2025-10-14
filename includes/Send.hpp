@@ -6,10 +6,11 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/23 20:50:36 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/10 13:15:03 by wirare           ###   ########.fr       */
+/*   Updated: 2025/10/14 18:55:02 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <UsefullMacro.hpp>
+#include <iostream>
 #ifndef BUILDER_MACRO
 	#define BUILDER_MACRO
 	#define BUILD_ERR_1(param)					param_str += param;
@@ -43,19 +44,21 @@
 
 #define SEND(...) SERVER_OPT sendMessage(FD_NAME, SERVER_OPT buildMessage(__VA_ARGS__))
 
-#define SEND_ERR(err, ...)								\
-	{													\
-		std::string param_str;							\
-		BUILD_ERR(__VA_OPT__(__VA_ARGS__))(__VA_ARGS__)	\
-		SERVER_OPT sendError(err, FD_NAME, param_str);	\
-		return;											\
+#define SEND_ERR(err, ...)																					\
+	{																										\
+		std::string param_str;																				\
+		BUILD_ERR(__VA_OPT__(__VA_ARGS__))(__VA_ARGS__)														\
+		SERVER_OPT sendError(err, FD_NAME, param_str);														\
+		std::cerr << "Sent error : " << param_str << "\n" << LOCATION(__FILE__, __func__, __LINE__) << "\n";\
+		return;																								\
 	}
 
-#define SEND_ERR_CONTINUE(err, ...)						\
-	{													\
-		std::string param_str;							\
-		BUILD_ERR(__VA_OPT__(__VA_ARGS__))(__VA_ARGS__)	\
-		SERVER_OPT sendError(err, FD_NAME, param_str);	\
-		continue;										\
+#define SEND_ERR_CONTINUE(err, ...)																			\
+	{																										\
+		std::string param_str;																				\
+		BUILD_ERR(__VA_OPT__(__VA_ARGS__))(__VA_ARGS__)														\
+		SERVER_OPT sendError(err, FD_NAME, param_str);														\
+		std::cerr << "Sent error : " << param_str << "\n" << LOCATION(__FILE__, __func__, __LINE__) << "\n";\
+		continue;																							\
 	}
 

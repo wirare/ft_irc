@@ -6,7 +6,7 @@
 /*   By: wirare <wirare@42angouleme.fr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/06 13:04:40 by wirare            #+#    #+#             */
-/*   Updated: 2025/10/11 16:35:43 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/14 16:47:20 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -21,3 +21,5 @@
 #define RPL_TOPIC 332
 #define RPL_TOPICWHOTIME 333
 #define RPL_INVITING 341
+#define RPL_CHANNELMODEIS 324
+#define RPL_CREATIONTIME 329

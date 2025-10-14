@@ -6,12 +6,12 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/10 13:00:40 by wirare           ###   ########.fr       */
+/*   Updated: 2025/10/14 17:34:04 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
-#include "RPL_list.hpp"
-#include "auto.hpp"
+#include <RPL_list.hpp>
+#include <auto.hpp>
 #include <cassert>
 #include <cstdarg>
 #include <cstdio>
@@ -99,6 +99,9 @@ public:
 		if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, conn_sock, &ev) == -1)
 			throw EPOLL_CTL_ADD_FAILURE;
 		Client *client = new Client(conn_sock);
+		char ipbuf[INET_ADDRSTRLEN];
+		inet_ntop(AF_INET, &addr.sin_addr, ipbuf, sizeof(ipbuf));
+		client->setHostname(ipbuf);
 		clientMap.insert(std::pair<int, Client*>(conn_sock, client));
 	}
 
@@ -230,7 +233,7 @@ public:
 		Client *client = clientMap.at(fd);
 		const std::string str_nick = client->getNick();
 		const char *nick = str_nick.c_str();
-		SEND("odsssssss", RPL_WELCOME, " ", nick, " :Welcome to the IRC network ", nick, "!", client->getUsername().c_str(), name.c_str());
+		SEND("odssssssss", RPL_WELCOME, " ", nick, " :Welcome to the IRC network ", nick, "!", client->getUsername().c_str(), "@", client->getHostname().c_str());
 		SEND("odssssss", RPL_YOURHOST, " ", nick, " :Your host is ", name.c_str(), ", running version", " 1.0");
 		SEND("odssssn", RPL_CREATED, " ", nick, " :This server was created ", ctime(&startTime));
 		SEND("odsssssss", RPL_MYINFO, " ", nick, " ", name.c_str(), " 1.0", " iow", " irsk");

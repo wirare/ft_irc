@@ -3,6 +3,7 @@
 #include <Message.hpp>
 #include <Client.hpp>
 #include <Server.hpp>
+#include <cstdlib>
 #include <iostream>
 #include <Send.hpp>
 #include <StringHelper.hpp>
@@ -112,8 +113,8 @@ CMD_DEF(JOIN)
 		}
 		else
 		{
-			Channel *newChan = server.createChannel(channels[i]);
-			newChan->addClient(body.client, OP);
+			chan = server.createChannel(channels[i]);
+			chan->addClient(body.client, OP);
 		}
 	}
 }
@@ -126,8 +127,8 @@ CMD_DEF(NAMES)
 		return ;
 
 	std::vector<std::string> channels = StringHelper::split(body.params[1], ',');
-	const std::string &_username = body.client->getUsername();
-	const char *username = _username.c_str();
+	const std::string &_nick = body.client->getNick();
+	const char *nick = _nick.c_str();
 
 	for (size_t i = 0; i != channels.size(); i++)
 	{
@@ -135,12 +136,12 @@ CMD_DEF(NAMES)
 		if (!chan)
 			continue;
 		auto clientMap = chan->getClientMap();
-		std::string msg(username);
+		std::string msg(nick);
 		msg += " = " + chan->getName() + " :";
 		for (auto it = clientMap.begin(); it != clientMap.end(); it++)
 			msg += " " + it->first->getNick();
 		SEND("odss", RPL_NAMEREPLY, " ", msg.c_str());
-		SEND("odsssss", RPL_ENDOFNAMES, " ", username, " ", channels[i].c_str(), " :End of /NAMES list");
+		SEND("odsssss", RPL_ENDOFNAMES, " ", nick, " ", channels[i].c_str(), " :End of /NAMES list");
 	}
 }
 
@@ -308,7 +309,6 @@ CMD_DEF(INVITE)
 }
 
 #define IS_PM(x) (x == '+' || x == '-')
-#define SIGN(x) x ? '+' : '-'
 CMD_DEF(MODE)
 {
 	if (body.params.size() == 1)
@@ -319,6 +319,13 @@ CMD_DEF(MODE)
 		SEND_ERR(ERR_NOSUCHCHANNEL, _NICK, body.params[1]);
 	if (!chan->hasClient(body.client))
 		SEND_ERR(ERR_NOTONCHANNEL, _NICK, body.params[1]);
+
+	if (body.params.size() == 2)
+	{
+		SEND("odssssss", RPL_CHANNELMODEIS, " ", _NICK.c_str(), " ", body.params[1].c_str(), " ", chan->getModeStr().c_str());
+		SEND("odsssssd", RPL_CREATIONTIME, " ", _NICK.c_str(), " ", body.params[1].c_str(), " ", chan->getCreationTime());
+		return;
+	}
 
 	std::stack<std::string> modeStack;
 	if (body.params.size() >= 4)
@@ -338,7 +345,7 @@ CMD_DEF(MODE)
 			case 'i': 
 			{
 				if (!chan->isOp(body.client))
-					SEND_ERR_CONTINUE(ERR_CHANOPRIVSNEEDED, _NICK, body.params[1]);
+					SEND_ERR_CONTINUE(ERR_CHANOPRIVSNEEDED, _NICK, body.params[1])
 				chan->setMode(INVITE_ONLY, currentMode);
 				chan->revokeInvite();
 				break;
@@ -346,7 +353,7 @@ CMD_DEF(MODE)
 			case 'k':
 			{
 				if (!chan->isOp(body.client))
-					SEND_ERR_CONTINUE(ERR_CHANOPRIVSNEEDED, _NICK, body.params[1]);
+					SEND_ERR_CONTINUE(ERR_CHANOPRIVSNEEDED, _NICK, body.params[1])
 				if (currentMode == true)
 				{
 					if (modeStack.size() == 0)
@@ -360,7 +367,7 @@ CMD_DEF(MODE)
 			case 'o':
 			{
 				if (!chan->isOp(body.client))
-					SEND_ERR_CONTINUE(ERR_CHANOPRIVSNEEDED, _NICK, body.params[1]);
+					SEND_ERR_CONTINUE(ERR_CHANOPRIVSNEEDED, _NICK, body.params[1])
 				if (modeStack.size() == 0)
 					SEND_ERR_CONTINUE(ERR_NEEDMOREPARAMS, _NICK, body.params[0]);
 				const std::string& nick = modeStack.top();
@@ -375,6 +382,34 @@ CMD_DEF(MODE)
 				else
 					chan->clientSetState(target, NORMAL);
 				break;
+			}
+			case 'l':
+			{
+				if (!chan->isOp(body.client))
+					SEND_ERR_CONTINUE(ERR_CHANOPRIVSNEEDED, _NICK, body.params[1])
+				if (currentMode == true)
+				{
+					if (modeStack.size() == 0)
+						SEND_ERR_CONTINUE(ERR_NEEDMOREPARAMS, _NICK, body.params[0]);
+					int userLimit = std::atoi(modeStack.top().c_str());
+					modeStack.pop();
+					if (userLimit <= 0)
+						continue;
+					chan->setUserLimit(userLimit);
+				}
+				chan->setMode(USER_LIMIT, currentMode);
+				break;
+			}
+			case 't':
+			{
+				if (!chan->isOp(body.client))
+					SEND_ERR_CONTINUE(ERR_CHANOPRIVSNEEDED, _NICK, body.params[1])
+				chan->setMode(TOPIC_RESTRICTION, currentMode);
+				break;
+			}
+			default:
+			{
+				SEND_ERR_CONTINUE(ERR_UNKNOWNMODE, _NICK, modes[i]);
 			}
 		}
 	}
