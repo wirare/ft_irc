@@ -1,5 +1,6 @@
 #pragma once
 
+#include "auto.hpp"
 #include <cstring>
 #include <string>
 #include <vector>
@@ -69,7 +70,13 @@ class IrcMessage
 			std::string &last = tokens.back();
 			if (last.at(last.size()-1) == '\r')
 				last.resize(last.size()-1);
-			return tokens;
+			std::vector<std::string> return_tokens;
+			for (auto it = tokens.begin(); it != tokens.end(); it++)
+			{
+				if (!it->empty())
+					return_tokens.push_back(*it);
+			}
+			return return_tokens;
 		}
 };
 

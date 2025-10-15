@@ -308,9 +308,10 @@ CMD_DEF(INVITE)
 	SEND("odsssss", RPL_INVITING, _NICK.c_str(), " ", body.params[1].c_str(), " ", body.params[2].c_str());
 }
 
-#define IS_PM(x) (x == '+' || x == '-')
+#define IS_PM(x) 
 CMD_DEF(MODE)
 {
+	std::cout << body << "\n";
 	if (body.params.size() == 1)
 		SEND_ERR(ERR_NEEDMOREPARAMS, _NICK, body.params[0]);
 
@@ -329,12 +330,12 @@ CMD_DEF(MODE)
 
 	std::stack<std::string> modeStack;
 	if (body.params.size() >= 4)
-		for (auto it = body.params.begin() + 4; it != body.params.end(); it++)
+		for (auto it = body.params.begin() + 3; it != body.params.end(); it++)
 			modeStack.push(it->data());
 
 	bool currentMode;
 	const std::string &modes = body.params[2];
-	if (!IS_PM(modes[0]))
+	if (!(modes[0] == '+' || modes[0] == '-'))
 		SEND_ERR(ERR_NEEDMOREPARAMS, _NICK, body.params[0]);
 	for (size_t i = 0; i != modes.size(); i++)
 	{
@@ -413,6 +414,7 @@ CMD_DEF(MODE)
 			}
 		}
 	}
+	chan->broadcast(server.buildMessage("cssssss", body.client->getFullName().c_str(), " MODE ", body.params[1].c_str(), " ", body.params[2].c_str()));
 }
 
 buildCmd(UNKNOWN);

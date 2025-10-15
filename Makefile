@@ -41,6 +41,7 @@ fclean: clean
 
 # Rebuild from scratch
 re: fclean all
+	clear
 
 .PHONY: all clean fclean re
 
