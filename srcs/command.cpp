@@ -214,7 +214,7 @@ CMD_DEF(TOPIC)
 		chan->setTopicTime(std::time(NULL));
 		chan->setTopicChanger(body.client->getNick());
 		std::string msg = body.client->getFullName();
-		msg += " TOPIC :" + topic;
+		msg += " TOPIC " + body.params[1] + " :" + topic;
 		chan->broadcast(msg);
 	}
 }
@@ -308,7 +308,6 @@ CMD_DEF(INVITE)
 	SEND("odsssss", RPL_INVITING, _NICK.c_str(), " ", body.params[1].c_str(), " ", body.params[2].c_str());
 }
 
-#define IS_PM(x) 
 CMD_DEF(MODE)
 {
 	std::cout << body << "\n";
@@ -414,7 +413,10 @@ CMD_DEF(MODE)
 			}
 		}
 	}
-	chan->broadcast(server.buildMessage("cssssss", body.client->getFullName().c_str(), " MODE ", body.params[1].c_str(), " ", body.params[2].c_str()));
+	std::string message;
+	for (auto it = body.params.begin() + 2; it != body.params.end(); it++)
+		message += " " + std::string(it->data());
+	chan->broadcast(server.buildMessage("cssss", body.client->getFullName().c_str(), " MODE ", body.params[1].c_str(), message.c_str()));
 }
 
 buildCmd(UNKNOWN);
