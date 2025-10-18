@@ -93,7 +93,13 @@ CMD_DEF(JOIN)
 		SEND_ERR(ERR_NEEDMOREPARAMS, _NICK, body.params[0]);
 	if (body.client->getState() != AUTH)
 		return ;
-
+	if (body.params[1] == "0")
+	{
+		std::vector<Channel*> channels = server.getClientChannel(body.client);
+		for (auto it = channels.begin(); it != channels.end(); it++)
+			executeCommandInternal(PART, StringHelper::makeVector("PART ", (*it)->getName()), body.client);
+		return;
+	}
 	std::vector<std::string> channels = StringHelper::split(body.params[1], ',');
 	std::vector<std::string> keys;
 	bool hasKey = body.params.size() >= 3;
