@@ -37,7 +37,7 @@ class Client: public ATarget
 		void recvMessage(Client *client, const std::string &msg) const;
 		const std::string getFullName() const 
 		{
-			std::string fullname(":");
+			std::string fullname;
 			fullname += Nick + "!" + Username + "@" + Hostname;
 			return fullname;
 		}
