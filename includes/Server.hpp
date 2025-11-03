@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/14 17:34:04 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/11/03 18:41:48 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -32,6 +32,7 @@
 #include <ctime>
 #include <ErrorCode.hpp>
 #include <Channel.hpp>
+#include <Commands.hpp>
 
 #define MAX_CLIENT 128
 #define SERVER

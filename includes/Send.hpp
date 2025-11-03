@@ -6,11 +6,10 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/23 20:50:36 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/14 18:55:02 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/11/03 19:59:20 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <UsefullMacro.hpp>
-#include <iostream>
 #ifndef BUILDER_MACRO
 	#define BUILDER_MACRO
 	#define BUILD_ERR_1(param)					param_str += param;

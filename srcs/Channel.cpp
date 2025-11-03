@@ -6,7 +6,7 @@
 /*   By: wirare <wirare@42angouleme.fr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/29 19:22:04 by wirare            #+#    #+#             */
-/*   Updated: 2025/10/14 17:42:53 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/11/03 18:42:00 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <ErrorCode.hpp>
@@ -16,6 +16,7 @@
 #include <Server.hpp>
 #include <RPL_list.hpp>
 #include <algorithm>
+#include <Commands.hpp>
 #include <ctime>
 #define CHANNEL
 #include <Send.hpp>

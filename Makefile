@@ -11,7 +11,7 @@ OBJDIR := .objs
 TARGET := ft_irc
 
 # Source and object files
-SRCFILES := $(wildcard $(SRCDIR)/*.cpp)
+SRCFILES := $(wildcard $(SRCDIR)/*.cpp) $(wildcard $(SRCDIR)/Commands/*.cpp)
 OBJFILES := $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(SRCFILES))
 
 # Default target
@@ -30,6 +30,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)
 # Create object directory if it doesn't exist
 $(OBJDIR):
 	mkdir -p $(OBJDIR)
+	mkdir -p $(OBJDIR)/Commands
 
 # Clean build files
 clean:
