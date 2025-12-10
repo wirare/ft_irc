@@ -6,19 +6,21 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/10 13:00:40 by wirare           ###   ########.fr       */
+/*   Updated: 2025/12/10 19:19:19 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
-#include "RPL_list.hpp"
-#include "auto.hpp"
+#include <RPL_list.hpp>
+#include <auto.hpp>
 #include <cassert>
+#include <cerrno>
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
 #include <cstring>
 #include <map>
+#include <ostream>
 #include <sstream>
 #include <string>
 #include <sys/types.h>
@@ -32,6 +34,9 @@
 #include <ctime>
 #include <ErrorCode.hpp>
 #include <Channel.hpp>
+#include <Commands.hpp>
+#include <Signals.hpp>
+#include <fcntl.h>
 
 #define MAX_CLIENT 128
 #define SERVER
@@ -47,11 +52,16 @@ public:
 			delete it->second;
 		for (auto it = clientMap.begin(); it != clientMap.end(); it++)
 			delete it->second;
+		close(sock_fd);
 	};
-	Server(int port, std::string password): name("localhost"), port(port), password(password)
+	void init(int _port, std::string _password)
 	{
+		name = "localhost";
+		port = _port;
+		password = _password;
 		try
 		{
+			setup_signals();
 			open_socket();
 			bind_port();
 			listen_socket();
@@ -69,10 +79,11 @@ public:
 
 	void launch()
 	{
-		std::cout << "Password : " << password << std::endl;
 		int nfds;
 		while (1)
 		{
+			if (g_stop == 1)
+				return;
 			nfds = epoll_wait(epoll_fd, events, MAX_CLIENT, -1);
 			if (nfds == -1)
 				throw EPOLL_WAIT_FAILURE;
@@ -94,7 +105,7 @@ public:
 		int conn_sock = accept(sock_fd, reinterpret_cast<sockaddr*>(&addr), &addrlen);
 		if (conn_sock == -1)
 			throw CANT_ACCEPT_CONNECTION;
-		ev.events = EPOLLIN | EPOLLET;
+		ev.events = EPOLLIN;
 		ev.data.fd = conn_sock;
 		if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, conn_sock, &ev) == -1)
 			throw EPOLL_CTL_ADD_FAILURE;
@@ -105,32 +116,51 @@ public:
 	void handle_message(int n)
 	{
 		char buf[512];
-		Client *client = clientMap.at(events[n].data.fd);
-		int count = recv(client->getFd(), buf, sizeof(buf) - 1, 0);
-		if (count <= 0) 
+		int fd = events[n].data.fd;
+		Client *client = clientMap.at(fd);
+
+		int count = recv(client->getFd(), buf, sizeof(buf), 0);
+		if (count <= 0)
 		{
-			clientMap.erase(client->getFd());
-			delete client;
-			return ;
-		}
-		buf[count] = '\0';
-		if (!*buf)
+			partialBuffers.erase(fd);
+			deleteClient(clientMap[fd]);
 			return;
-		std::cout << "Client number " << client->getFd() << " sent : " << buf;
-		std::vector<std::string> commands = StringHelper::split(buf, '\n');
-		for (auto it = commands.begin(); it != commands.end(); ++it)
+		}
+
+		std::string &leftover = partialBuffers[fd];
+		leftover.append(buf, count);
+
+		const size_t MAX_LEFTOVER = 8192;
+		if (leftover.size() > MAX_LEFTOVER) 
 		{
-			IrcMessage msg(it->data());
+			std::cerr << "Client " << fd << " leftover too large, closing connection\n";
+			partialBuffers.erase(fd);
+			deleteClient(clientMap[fd]);
+			return;
+		}
+
+		size_t pos;
+		while ((pos = leftover.find('\n')) != std::string::npos) 
+		{
+			std::string line = leftover.substr(0, pos);
+			leftover.erase(0, pos + 1);
+			if (!line.empty() && line[line.size() - 1] == '\r') 
+				line.erase(line.size() - 1);
+			if (line.empty())
+				continue;
+			std::cout << "Client number " << fd << " sent : " << line << std::endl;
+			IrcMessage msg(line);
 			executeCommand(msg, client);
 		}
 	}
 
 	void open_socket()
 	{
-		sock_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
-		int opt = 1;
-		if (sock_fd == 1)
+		sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+		if (sock_fd == -1)
 			throw CANT_OPEN_SOCKET;
+
+		int opt = 1;
 		setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 	}
 
@@ -154,7 +184,8 @@ public:
 	void create_epoll()
 	{
 		epoll_fd = epoll_create(1);
-
+		if (epoll_fd == -1)
+			throw EPOLL_CTL_ADD_FAILURE;
 		ev.events = EPOLLIN;
 		ev.data.fd = sock_fd;
 		if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, sock_fd, &ev) == -1)
@@ -230,7 +261,7 @@ public:
 		Client *client = clientMap.at(fd);
 		const std::string str_nick = client->getNick();
 		const char *nick = str_nick.c_str();
-		SEND("odsssssss", RPL_WELCOME, " ", nick, " :Welcome to the IRC network ", nick, "!", client->getUsername().c_str(), name.c_str());
+		SEND("odssssssss", RPL_WELCOME, " ", nick, " :Welcome to the IRC network ", nick, "!", client->getUsername().c_str(), "@", client->getHostname().c_str());
 		SEND("odssssss", RPL_YOURHOST, " ", nick, " :Your host is ", name.c_str(), ", running version", " 1.0");
 		SEND("odssssn", RPL_CREATED, " ", nick, " :This server was created ", ctime(&startTime));
 		SEND("odsssssss", RPL_MYINFO, " ", nick, " ", name.c_str(), " 1.0", " iow", " irsk");
@@ -298,6 +329,7 @@ private:
 	std::map<int, Client*> clientMap;
 	std::map<std::string, Channel*> channelMap;
 	time_t startTime;
+	std::map<int, std::string> partialBuffers;
 };
 #undef SERVER
 

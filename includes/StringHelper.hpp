@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/28 19:39:02 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/01 15:03:33 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/20 14:24:23 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -46,5 +46,12 @@ namespace StringHelper
 		v.push_back(str1);
 		v.push_back(str2);
 		return v;
+	}
+
+	inline std::string itoa(int nb)
+	{
+		std::string str;
+		str += nb;
+		return str;
 	}
 };

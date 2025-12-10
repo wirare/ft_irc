@@ -28,11 +28,7 @@ class Client: public ATarget
 
 	public:
 		Client() {};
-		Client(int fd): Nick(""), Username(""), Realname(""), State(NEW), LastPass(""), SendPass(false), fd(fd) 
-		{
-			struct sockaddr_in addr;
-			Hostname = inet_ntoa(addr.sin_addr);
-		}
+		Client(int fd): Nick(""), Username(""), Realname(""), State(NEW), LastPass(""), SendPass(false), fd(fd) {}
 		~Client() { close(fd); }
 		inline int	getFd() const { return fd; };
 		inline bool operator<(const Client &other) const { return fd < other.fd; }
@@ -41,7 +37,7 @@ class Client: public ATarget
 		void recvMessage(Client *client, const std::string &msg) const;
 		const std::string getFullName() const 
 		{
-			std::string fullname(":");
+			std::string fullname;
 			fullname += Nick + "!" + Username + "@" + Hostname;
 			return fullname;
 		}

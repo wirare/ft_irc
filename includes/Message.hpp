@@ -1,5 +1,6 @@
 #pragma once
 
+#include "auto.hpp"
 #include <cstring>
 #include <string>
 #include <vector>
@@ -69,31 +70,12 @@ class IrcMessage
 			std::string &last = tokens.back();
 			if (last.at(last.size()-1) == '\r')
 				last.resize(last.size()-1);
-			return tokens;
+			std::vector<std::string> return_tokens;
+			for (auto it = tokens.begin(); it != tokens.end(); it++)
+			{
+				if (!it->empty())
+					return_tokens.push_back(*it);
+			}
+			return return_tokens;
 		}
 };
-
-struct CmdBody
-{
-	CmdBody(Client *client, const IrcMessage& msg): client(client), params(msg.params) {};
-	CmdBody(Client *client, const std::vector<std::string> &params): client(client), params(params) {};
-	Client *client;
-	std::vector<std::string> params;
-};
-
-inline std::ostream &operator<<(std::ostream &os, CmdBody &body)
-{
-	os << "CmdBody client informations: \n{\n" << body.client;
-	os << "}\nCmdBody params: {";
-	for (std::vector<std::string>::iterator it = body.params.begin(); it != body.params.end(); ++it)
-	{
-		os << it->data();
-		if (it + 1 != body.params.end())
-			os << ", ";
-	}
-	os << "}\n";
-	return os;
-}
-
-void executeCommand(const IrcMessage &msg, Client *client);
-void executeCommandInternal(CommandId id, std::vector<std::string> msg, Client *client);

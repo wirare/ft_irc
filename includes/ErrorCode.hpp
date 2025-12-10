@@ -6,7 +6,7 @@
 /*   By: wirare <wirare@42angouleme.fr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/09 18:17:41 by wirare            #+#    #+#             */
-/*   Updated: 2025/10/11 16:37:38 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/10/14 16:15:19 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -26,6 +26,7 @@
 #define ERR462 "You may not reregister"
 #define ERR464 "Password incorrect"
 #define ERR471 "Cannot join channel (+l)"
+#define ERR472 "is unknown mode char to me"
 #define ERR473 "Cannot join channel (+i)"
 #define ERR475 "Cannot join channel (+k)"
 #define ERR476 "Bad Channel Mask"
@@ -42,6 +43,7 @@
 #define ERR_ALREADYREGISTERED 462
 #define ERR_PASSWDMISMATCH 464
 #define ERR_CHANNELISFULL 471
+#define ERR_UNKNOWNMODE 472
 #define ERR_INVITEONLYCHAN 473
 #define ERR_BADCHANNELKEY 475
 #define ERR_BADCHANMASK 476
@@ -62,6 +64,7 @@ inline std::string getErrMsg(int err)
 		ERR(462);
 		ERR(464);
 		ERR(471);
+		ERR(472);
 		ERR(473);
 		ERR(475);
 		ERR(476);

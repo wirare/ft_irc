@@ -1,25 +1,23 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   RPL_list.hpp                                       :+:      :+:    :+:   */
+/*   ping.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: wirare <wirare@42angouleme.fr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/10/06 13:04:40 by wirare            #+#    #+#             */
-/*   Updated: 2025/10/14 16:47:20 by ellanglo         ###   ########.fr       */
+/*   Created: 2025/11/03 18:36:19 by wirare            #+#    #+#             */
+/*   Updated: 2025/11/03 18:41:20 by wirare           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-#pragma once
+#include <Commands.hpp>
+#include <ErrorCode.hpp>
+#include <Server.hpp>
+#include <Client.hpp>
+#include <Send.hpp>
 
-#define RPL_WELCOME 001
-#define RPL_YOURHOST 002
-#define RPL_CREATED 003
-#define RPL_MYINFO 004
-#define RPL_NAMEREPLY 353
-#define RPL_ENDOFNAMES 366
-#define RPL_NOTOPIC 331
-#define RPL_TOPIC 332
-#define RPL_TOPICWHOTIME 333
-#define RPL_INVITING 341
-#define RPL_CHANNELMODEIS 324
-#define RPL_CREATIONTIME 329
+CMD_DEF(PING)
+{
+	if (body.params.size() <= 1)
+		SEND_ERR(ERR_NEEDMOREPARAMS, _NICK, body.params[0]);
+	SEND("ss", "PONG", body.params[1].c_str());
+}
