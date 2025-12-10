@@ -6,7 +6,7 @@
 /*   By: wirare <wirare@42angouleme.fr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/03 18:37:13 by wirare            #+#    #+#             */
-/*   Updated: 2025/11/03 18:37:20 by wirare           ###   ########.fr       */
+/*   Updated: 2025/12/09 14:50:40 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <Commands.hpp>
@@ -35,7 +35,12 @@ CMD_DEF(NAMES)
 		std::string msg(nick);
 		msg += " = " + chan->getName() + " :";
 		for (auto it = clientMap.begin(); it != clientMap.end(); it++)
-			msg += " " + it->first->getNick();
+		{
+			msg += " ";
+			if (it->second == OP)
+				msg += "@";
+			msg += it->first->getNick();
+		}
 		SEND("odss", RPL_NAMEREPLY, " ", msg.c_str());
 		SEND("odsssss", RPL_ENDOFNAMES, " ", nick, " ", channels[i].c_str(), " :End of /NAMES list");
 	}

@@ -6,7 +6,7 @@
 /*   By: wirare <wirare@42angouleme.fr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/03 18:39:43 by wirare            #+#    #+#             */
-/*   Updated: 2025/11/03 18:40:40 by wirare           ###   ########.fr       */
+/*   Updated: 2025/12/09 14:46:56 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "../../includes/Commands.hpp"
@@ -183,4 +183,3 @@ CMD_DEF(MODE)
 	}
 	chan->broadcast(server.buildMessage("csssss", body.client->getFullName().c_str(), " MODE ", body.params[1].c_str(), modeCharStr.c_str(), modeParamStr.c_str()));
 }
-

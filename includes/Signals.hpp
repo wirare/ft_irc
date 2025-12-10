@@ -1,31 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
+/*   Signals.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/09/11 16:22:15 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/12/10 16:52:24 by ellanglo         ###   ########.fr       */
+/*   Created: 2025/12/10 15:59:05 by ellanglo          #+#    #+#             */
+/*   Updated: 2025/12/10 16:11:53 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-#include <Server.hpp>
-#include <cstdlib>
-#include <cctype>
-#include <iostream>
+#pragma once
+#include <csignal>
 
-Server server;
-
-int main(int ac, char **av) 
-{
-	if (ac != 3 || !std::atoi(av[1]))
-	{
-		std::cerr << "Wrong argument\n";
-		return 1;
-	}
-	server = Server(std::atoi(av[1]), av[2]);
-	server.launch();
-	if (g_stop == 1)
-		return 0;
-    return 0;
-}
+extern volatile sig_atomic_t g_stop;
+void setup_signals();

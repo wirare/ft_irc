@@ -6,7 +6,7 @@
 /*   By: wirare <wirare@42angouleme.fr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/03 18:37:55 by wirare            #+#    #+#             */
-/*   Updated: 2025/11/03 18:38:05 by wirare           ###   ########.fr       */
+/*   Updated: 2025/12/09 14:42:59 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <Commands.hpp>
@@ -49,7 +49,7 @@ CMD_DEF(TOPIC)
 		chan->setTopic(topic);
 		chan->setTopicTime(std::time(NULL));
 		chan->setTopicChanger(body.client->getNick());
-		std::string msg = body.client->getFullName();
+		std::string msg = ":" + body.client->getFullName();
 		msg += " TOPIC " + body.params[1] + " :" + topic;
 		chan->broadcast(msg);
 	}

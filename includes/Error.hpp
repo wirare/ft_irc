@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:57:59 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/10/14 18:49:48 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/12/10 16:33:21 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <stdexcept>
@@ -24,3 +24,4 @@
 #define EPOLL_CTL_ADD_FAILURE EXCEPTION(std::runtime_error, "Error on EPOLL_CTL_ADD")
 #define CANT_ACCEPT_CONNECTION EXCEPTION(std::runtime_error, "Can't accept the connection")
 #define EPOLL_WAIT_FAILURE EXCEPTION(std::runtime_error, "Error on epoll_wait")
+#define EPOLL_CREATE_FAILURE EXCEPTION(std::runtime_error, "Can't create epoll")

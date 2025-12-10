@@ -1,31 +1,35 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
+/*   sighandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/09/11 16:22:15 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/12/10 16:52:24 by ellanglo         ###   ########.fr       */
+/*   Created: 2025/12/10 15:55:58 by ellanglo          #+#    #+#             */
+/*   Updated: 2025/12/10 16:00:42 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <Server.hpp>
-#include <cstdlib>
-#include <cctype>
-#include <iostream>
+#include <csignal>
+#include <cstring>
+#include <unistd.h>
+#include <Signals.hpp>
 
-Server server;
+volatile sig_atomic_t g_stop = 0;
 
-int main(int ac, char **av) 
+void handle_signal(int sig)
 {
-	if (ac != 3 || !std::atoi(av[1]))
-	{
-		std::cerr << "Wrong argument\n";
-		return 1;
-	}
-	server = Server(std::atoi(av[1]), av[2]);
-	server.launch();
-	if (g_stop == 1)
-		return 0;
-    return 0;
+    if (sig == SIGINT || sig == SIGTERM)
+        g_stop = 1;
+}
+
+void setup_signals()
+{
+    struct sigaction sa;
+    std::memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = handle_signal;
+    sigemptyset(&sa.sa_mask);
+
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
 }
