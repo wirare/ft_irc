@@ -6,12 +6,13 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 16:22:15 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/12/10 16:52:24 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/12/10 19:21:20 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <Server.hpp>
 #include <cstdlib>
 #include <cctype>
+#include <exception>
 #include <iostream>
 
 Server server;
@@ -23,9 +24,17 @@ int main(int ac, char **av)
 		std::cerr << "Wrong argument\n";
 		return 1;
 	}
-	server = Server(std::atoi(av[1]), av[2]);
-	server.launch();
-	if (g_stop == 1)
-		return 0;
+	server.init(std::atoi(av[1]), av[2]);
+	try
+	{
+		server.launch();
+	}
+	catch (std::exception &e)
+	{
+		if (g_stop)
+			return 0;
+		else
+			std::cerr << e.what() << std::endl;
+	}
     return 0;
 }

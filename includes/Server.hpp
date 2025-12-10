@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/12/10 18:35:24 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/12/10 19:19:19 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -54,20 +54,18 @@ public:
 			delete it->second;
 		close(sock_fd);
 	};
-	Server(int port, std::string password): name("localhost"), port(port), password(password)
+	void init(int _port, std::string _password)
 	{
+		name = "localhost";
+		port = _port;
+		password = _password;
 		try
 		{
-			std::cout << port << std::endl;
 			setup_signals();
 			open_socket();
-			std::cout << "Socket created: " << sock_fd << std::endl;
 			bind_port();
-			std::cout << "Bind done" << std::endl;
 			listen_socket();
-			std::cout << "Listening..." << std::endl;
 			create_epoll();
-			std::cout << "Epoll created: " << epoll_fd << std::endl;
 			time(&startTime);
 		}
 		catch (std::exception &e)
@@ -81,24 +79,16 @@ public:
 
 	void launch()
 	{
-		std::cout << "Password : " << password << std::endl;
 		int nfds;
 		while (1)
 		{
 			if (g_stop == 1)
 				return;
-			std::cerr << "before epoll_wait of fd: " << epoll_fd << "\n";
 			nfds = epoll_wait(epoll_fd, events, MAX_CLIENT, -1);
-			std::cerr << "epoll_wait returned nfds=" << nfds << " errno=" << errno << std::endl;
 			if (nfds == -1)
-			{
-				if (errno == EINTR)
-					continue;
 				throw EPOLL_WAIT_FAILURE;
-			}
 			for (int n = 0; n < nfds; n++)
 			{
-				std::cout << n << "\n";
 				if (events[n].data.fd == sock_fd)
 				{
 					try { handle_connect(); }
@@ -112,47 +102,15 @@ public:
 
 	void handle_connect()
 	{
-		while (1)
-		{
-			sockaddr_in client_addr;
-			socklen_t client_len = sizeof(client_addr);
-			std::cerr << "handle_connect: calling accept()\n";
-			int conn_sock = accept(sock_fd, reinterpret_cast<sockaddr*>(&client_addr), &client_len);
-			std::cerr << "accept returned " << conn_sock << " errno=" << errno << " (" << strerror(errno) << ")\n";
-			if (conn_sock == -1)
-			{
-				if (errno == EAGAIN || errno == EWOULDBLOCK) {
-					break;
-				} else {
-					std::cerr << "accept() failed: " << strerror(errno) << std::endl;
-					break;
-				}
-			}
-			int flags = fcntl(conn_sock, F_GETFL, 0);
-			if (flags == -1) flags = 0;
-			if (fcntl(conn_sock, F_SETFL, flags | O_NONBLOCK) == -1) 
-			{
-				std::cerr << "fcntl(client) failed: " << strerror(errno) << std::endl;
-				close(conn_sock);
-				continue;
-			}
-
-			struct epoll_event client_ev;
-			client_ev.events = EPOLLIN;
-			client_ev.data.fd = conn_sock;
-			if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, conn_sock, &client_ev) == -1)
-			{
-				std::cerr << "epoll_ctl ADD conn_sock failed: " << strerror(errno) << std::endl;
-				close(conn_sock);
-				continue;
-			}
-
-			Client *client = new Client(conn_sock);
-			char ipbuf[INET_ADDRSTRLEN];
-			inet_ntop(AF_INET, &client_addr.sin_addr, ipbuf, sizeof(ipbuf));
-			client->setHostname(ipbuf);
-			clientMap.insert(std::make_pair(conn_sock, client));
-		}
+		int conn_sock = accept(sock_fd, reinterpret_cast<sockaddr*>(&addr), &addrlen);
+		if (conn_sock == -1)
+			throw CANT_ACCEPT_CONNECTION;
+		ev.events = EPOLLIN;
+		ev.data.fd = conn_sock;
+		if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, conn_sock, &ev) == -1)
+			throw EPOLL_CTL_ADD_FAILURE;
+		Client *client = new Client(conn_sock);
+		clientMap.insert(std::pair<int, Client*>(conn_sock, client));
 	}
 
 	void handle_message(int n)
@@ -173,7 +131,8 @@ public:
 		leftover.append(buf, count);
 
 		const size_t MAX_LEFTOVER = 8192;
-		if (leftover.size() > MAX_LEFTOVER) {
+		if (leftover.size() > MAX_LEFTOVER) 
+		{
 			std::cerr << "Client " << fd << " leftover too large, closing connection\n";
 			partialBuffers.erase(fd);
 			deleteClient(clientMap[fd]);
@@ -203,11 +162,6 @@ public:
 
 		int opt = 1;
 		setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-
-		int flags = fcntl(sock_fd, F_GETFL, 0);
-		if (flags == -1) flags = 0;
-		if (fcntl(sock_fd, F_SETFL, flags | O_NONBLOCK) == -1)
-			std::cerr << "fcntl(sock_fd, O_NONBLOCK) failed: " << strerror(errno) << std::endl;
 	}
 
 	void bind_port()
@@ -225,12 +179,6 @@ public:
 	{
 		if (listen(sock_fd, SOMAXCONN) == -1)
 			throw CANT_LISTEN_SOCKET;
-
-		struct sockaddr_in actual_addr;
-		socklen_t actual_len = sizeof(actual_addr);
-		if (getsockname(sock_fd, (struct sockaddr*)&actual_addr, &actual_len) == 0) {
-			std::cout << "Actually listening on port: " << ntohs(actual_addr.sin_port) << std::endl;
-		}
 	}
 
 	void create_epoll()
