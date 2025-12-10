@@ -16,6 +16,7 @@ OBJFILES := $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(SRCFILES))
 
 # Default target
 all: $(TARGET)
+	make -C bot all
 
 # Link object files into final binary
 $(TARGET): $(OBJFILES)
@@ -35,14 +36,18 @@ $(OBJDIR):
 # Clean build files
 clean:
 	rm -rf $(OBJDIR)
+	make -C bot clean
 
 # Clean everything including binary
 fclean: clean
 	rm -f $(TARGET)
+	make -C bot fclean
 
 # Rebuild from scratch
 re: fclean all
+	make -C bot re
 	clear
+	
 
 .PHONY: all clean fclean re
 
