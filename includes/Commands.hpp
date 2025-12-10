@@ -6,7 +6,7 @@
 /*   By: wirare <wirare@42angouleme.fr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/03 18:25:43 by wirare            #+#    #+#             */
-/*   Updated: 2025/11/03 18:53:43 by wirare           ###   ########.fr       */
+/*   Updated: 2025/12/10 20:56:32 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -22,7 +22,7 @@
 	void cmd##id(CmdBody body) { (void)body; }
 
 #define CALL(id) cmd##id(body)
-#define CASE(id) case id: CALL_LOG(id); CALL(id); break;
+#define CASE(id) case id: CALL(id); break;
 
 #define CMD_DEF(id) \
 	void cmd##id(CmdBody &body)

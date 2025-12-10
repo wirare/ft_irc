@@ -6,7 +6,7 @@
 /*   By: ellanglo <ellanglo@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 18:37:21 by ellanglo          #+#    #+#             */
-/*   Updated: 2025/12/10 19:19:19 by ellanglo         ###   ########.fr       */
+/*   Updated: 2025/12/10 20:55:38 by ellanglo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -148,7 +148,6 @@ public:
 				line.erase(line.size() - 1);
 			if (line.empty())
 				continue;
-			std::cout << "Client number " << fd << " sent : " << line << std::endl;
 			IrcMessage msg(line);
 			executeCommand(msg, client);
 		}
